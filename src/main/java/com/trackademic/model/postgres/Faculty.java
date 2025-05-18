@@ -15,4 +15,46 @@ public class Faculty {
     @OneToOne
     @JoinColumn(name = "dean_id")
     private Employee dean;
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public Employee getDean() {
+        return dean;
+    }
+
+    public void setDean(Employee dean) {
+        this.dean = dean;
+    }
+
+    
 }
