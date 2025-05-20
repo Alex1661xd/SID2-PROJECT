@@ -15,10 +15,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 
 @Entity
-@Table(name = "students")
+@Table(name = "students", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 
 public class Student implements UserDetails {
     @Id

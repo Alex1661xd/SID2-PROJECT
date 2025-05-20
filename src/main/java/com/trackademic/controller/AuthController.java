@@ -25,7 +25,7 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        return "login";
+        return "auth/login";
     }
 
     @GetMapping("/register")
@@ -33,7 +33,7 @@ public class AuthController {
         model.addAttribute("student", new Student());
         model.addAttribute("campuses", campusRepository.findAll());
         model.addAttribute("cities", cityRepository.findAll());
-        return "register";
+        return "auth/register";
     }
 
     @PostMapping("/register")

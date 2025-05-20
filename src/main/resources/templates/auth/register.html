@@ -33,13 +33,13 @@
         <div>
             <label>Campus:</label>
             <select th:field="*{campus}">
-                <option th:each="campus : ${campuses}" th:value="${campus.id}" th:text="${campus.name}"></option>
+                <option th:each="campus : ${campuses}" th:value="${campus.code}" th:text="${campus.name}"></option>
             </select>
         </div>
         <div>
             <label>Birth Place:</label>
             <select th:field="*{birthPlace}">
-                <option th:each="city : ${cities}" th:value="${city.id}" th:text="${city.name}"></option>
+                <option th:each="city : ${cities}" th:value="${city.code}" th:text="${city.name}"></option>
             </select>
         </div>
         
