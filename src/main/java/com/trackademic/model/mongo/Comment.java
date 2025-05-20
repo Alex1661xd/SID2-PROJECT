@@ -1,17 +1,26 @@
 package com.trackademic.model.mongo;
 
+import java.time.LocalDateTime;
+
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
+@Document(collection = "comments")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Comment {
+    @Id
+    private String id;
+    private String planId;
     private String studentId;
     private String content;
+    private LocalDateTime timestamp;
 }
 

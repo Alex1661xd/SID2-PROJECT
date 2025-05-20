@@ -19,7 +19,10 @@ public class EvaluationPlan {
     @Id
     private String id;
 
-    private String groupId; // referencia manual al grupo del modelo relacional
+    private String groupId; 
+    private String title;
 
     private List<EvaluationActivity> activities;
+
+    private String createByStudentId;
 }
