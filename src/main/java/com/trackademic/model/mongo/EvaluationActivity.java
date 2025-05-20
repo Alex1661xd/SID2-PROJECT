@@ -14,7 +14,4 @@ import lombok.NoArgsConstructor;
 public class EvaluationActivity {
     private String name;
     private Double percentage;
-
-    private List<Grade> grades;
-    private List<Comment> comments;
 }

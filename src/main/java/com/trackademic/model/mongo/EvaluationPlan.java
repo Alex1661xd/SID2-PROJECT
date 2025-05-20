@@ -24,5 +24,5 @@ public class EvaluationPlan {
 
     private List<EvaluationActivity> activities;
 
-    private String createByStudentId;
+    private String createdByStudentId;
 }
