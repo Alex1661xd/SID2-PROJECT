@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.trackademic.model.postgres.Student;
+import com.trackademic.repository.postgres.CampusRepository;
+import com.trackademic.repository.postgres.CityRepository;
 import com.trackademic.service.StudentService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final StudentService studentService;
+    private final CampusRepository campusRepository;
+    private final CityRepository cityRepository;
 
     @GetMapping("/login")
     public String login() {
@@ -27,9 +31,8 @@ public class AuthController {
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         model.addAttribute("student", new Student());
-        // Add lists of campuses and cities if needed for dropdowns
-        // model.addAttribute("campuses", campusRepository.findAll());
-        // model.addAttribute("cities", cityRepository.findAll());
+        model.addAttribute("campuses", campusRepository.findAll());
+        model.addAttribute("cities", cityRepository.findAll());
         return "register";
     }
 

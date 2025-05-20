@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.trackademic.model.postgres.Student;
 import com.trackademic.repository.postgres.StudentRepository;
@@ -24,6 +25,7 @@ public class StudentService implements UserDetailsService{
                .orElseThrow(() -> new UsernameNotFoundException("Student not found with email: " + email));
    }
 
+   @Transactional
    public void registerStudent(Student student) {
        // Encode the password before saving
        student.setPassword(passwordEncoder.encode(student.getPassword()));
