@@ -25,7 +25,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         String email = ((Student) authentication.getPrincipal()).getUsername();
 
         if (email.startsWith("admin@")) {
-            response.sendRedirect("AdminHome/adminHome");
+            response.sendRedirect("/admin");
         } else {
             response.sendRedirect("/home");
         }

@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class StudentService implements UserDetailsService{
    private final StudentRepository studentRepository;
    private final PasswordEncoder passwordEncoder;
+
    @Override
    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
     Student student = studentRepository.findByEmail(email)
@@ -30,9 +31,10 @@ public class StudentService implements UserDetailsService{
    }
 
    @Transactional
-   public void registerStudent(Student student) {
-    student.setPassword(passwordEncoder.encode(student.getPassword()));
-    studentRepository.save(student);
-   }
+    public void registerStudent(Student student) {
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
+        studentRepository.save(student);
+    }
+
     
 }

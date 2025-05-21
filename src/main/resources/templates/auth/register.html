@@ -7,7 +7,7 @@
 </head>
 <body>
     <h2>Student Registration</h2>
-    <form th:action="@{/register}" th:object="${student}" method="post">
+    <form th:action="@{/auth/register}" th:object="${student}" method="post">
         <div>
             <label>First Name:</label>
             <input type="text" th:field="*{firstName}"/>
@@ -47,6 +47,6 @@
             <input type="submit" value="Register"/>
         </div>
     </form>
-    <p>Already have an account? <a th:href="@{/login}">Login here</a></p>
+    <p>Already have an account? <a th:href="@{/auth/login}">Login here</a></p>
 </body>
 </html>

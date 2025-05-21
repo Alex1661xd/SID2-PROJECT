@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Grupo</title>
+    <link rel="stylesheet" 
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Crear Nueva Facultad</h2>
+
+    <form th:action="@{/admin/create-faculty}" th:object="${faculty}" method="post">
+        <div class="mb-3">
+            <label class="form-label">Id Facultad</label>
+            <input type="number" class="form-control" th:field="*{code}" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Nombre Facultad</label>
+            <input type="text" class="form-control" th:field="*{name}" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Ciudad</label>
+             <select class="form-select" th:field="*{location}" required>
+                <option th:each="prof : ${city}"
+                        th:value="${prof.name}"
+                        th:text="${prof.name}">
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Numero de telefono</label>
+            <input type="number" class="form-control" th:field="*{phoneNumber}" placeholder="Ej: +57 314.." required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Empleado</label>
+            <select class="form-select" th:field="*{employeeId}" required>
+                <option th:each="prof : ${employee}"
+                        th:value="${prof.id}"
+                        th:text="|${prof.firstName} ${prof.lastName}|">
+                </option>
+            </select>
+
+        </div>
+        <button type="submit" class="btn btn-primary">Crear Facultad</button>
+        <a th:href="@{/admin}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

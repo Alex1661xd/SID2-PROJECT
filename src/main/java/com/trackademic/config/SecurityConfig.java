@@ -16,25 +16,27 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     private final CustomLoginSuccessHandler loginSuccessHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/auth/login")
-                .successHandler(loginSuccessHandler) 
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
-        return http.build();
-    }
+   @Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/auth/**", "/css/**", "/js/**", "/img/**").permitAll()
+            .requestMatchers("/admin/**").authenticated()
+            .anyRequest().authenticated()
+        )
+        .formLogin(form -> form
+            .loginPage("/auth/login")
+            .successHandler(loginSuccessHandler)
+            .permitAll()
+        )
+        .logout(logout -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/auth/login?logout") 
+            .permitAll()
+        );
+    return http.build();
+}
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
