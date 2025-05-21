@@ -1,4 +1,4 @@
-package com.trackademic.service;
+package com.trackademic.service.postgres;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

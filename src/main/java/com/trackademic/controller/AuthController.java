@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.trackademic.model.postgres.Student;
 import com.trackademic.repository.postgres.CampusRepository;
 import com.trackademic.repository.postgres.CityRepository;
-import com.trackademic.service.StudentService;
+import com.trackademic.service.postgres.StudentService;
 
 import lombok.RequiredArgsConstructor;
 
