@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h2 sec:authorize="isAuthenticated()">
+        Welcome, <span th:text="${#authentication.getName()}"></span>!
+    </h2>
+    <h2 sec:authorize="!isAuthenticated()">
+        Welcome, Guest!
+    </h2>
+    <a th:href="@{/logout}" sec:authorize="isAuthenticated()">Logout</a>
+</body>
+</html>

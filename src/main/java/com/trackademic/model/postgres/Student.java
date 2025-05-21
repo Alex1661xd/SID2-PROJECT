@@ -1,13 +1,27 @@
 package com.trackademic.model.postgres;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
 
 @Entity
-@Table(name = "students")
+@Table(name = "students", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 
-public class Student {
+public class Student implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -64,10 +78,6 @@ public class Student {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -110,6 +120,42 @@ public class Student {
 
     public void setPrograms(List<StudentProgram> programs) {
         this.programs = programs;
+    }
+
+        // Implement UserDetails methods
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList(); // Add roles if needed
+    }
+
+    @Override
+    public String getUsername() {
+        return email; // Use email as the username for login
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     
