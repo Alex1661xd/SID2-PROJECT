@@ -14,6 +14,7 @@ public class Group {
 
     @Id
     private String semester;
+    
     @Transient
     private String professorId;
 

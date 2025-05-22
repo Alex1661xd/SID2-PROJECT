@@ -7,9 +7,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.trackademic.repository.postgres.*;
-import com.trackademic.model.postgres.Employee;
-import com.trackademic.model.postgres.Faculty;
-import com.trackademic.model.postgres.Group;
+import com.trackademic.model.postgres.*;
 
 @Controller
 @RequestMapping("/admin")
@@ -25,12 +23,18 @@ public class AdminController {
 
     private final CityRepository cityRepository;
 
-    public AdminController(FacultyRepository facultyRepository,CityRepository cityRepository,EmployeeRepository employeeRepository,GroupRepository groupRepository, SubjectRepository subjectRepository) {
+    private final AreaRepository areaRepository;
+
+    private final ProgramRepository programRepository;
+
+    public AdminController(FacultyRepository facultyRepository, ProgramRepository programRepository,AreaRepository areaRepository,CityRepository cityRepository,EmployeeRepository employeeRepository,GroupRepository groupRepository, SubjectRepository subjectRepository) {
         this.employeeRepository = employeeRepository;
         this.groupRepository=groupRepository;
         this.subjectRepository=subjectRepository;
         this.facultyRepository=facultyRepository;
         this.cityRepository=cityRepository;
+        this.areaRepository=areaRepository;
+        this.programRepository=programRepository;
     }
     @GetMapping
     public String home() {
@@ -73,5 +77,38 @@ public class AdminController {
         return "redirect:/admin?facultyCreated";
     }
 
+
+    @GetMapping("/create-program")
+    public String showCreateProgramForm(Model model) {
+        model.addAttribute("program", new Program());
+        model.addAttribute("areas", areaRepository.findAll());
+        return "AdminHome/createProgram";
+    }   
+
+   @PostMapping("/create-program")
+    public String createProgram(@ModelAttribute Program program) {
+        Area area = areaRepository.findById(program.getAreaId())
+                                        .orElseThrow(() -> new RuntimeException("Area No encontrada"));
+        program.setArea(area);
+        programRepository.save(program);
+        return "redirect:/admin?programCreated";
+    }
+
+
+    @GetMapping("/create-subject")
+    public String showCreateSubjectForm(Model model) {
+        model.addAttribute("subject", new Subject());
+        model.addAttribute("programs", programRepository.findAll());
+        return "AdminHome/createSubject";
+    }   
+
+   @PostMapping("/create-subject")
+    public String createSubject(@ModelAttribute Subject subject) {
+        Program program = programRepository.findById(subject.getProgramId())
+                                        .orElseThrow(() -> new RuntimeException("Area No encontrada"));
+        subject.setProgram(program);
+        subjectRepository.save(subject);
+        return "redirect:/admin?subjectCreated";
+    }
 
 }
