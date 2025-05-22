@@ -14,6 +14,17 @@ public class Subject {
     @JoinColumn(name = "program_code", nullable = false)
     private Program program;
 
+    @Transient
+    private int programId;
+
+    public int getProgramId() {
+        return programId;
+    }
+
+    public void setProgramId(int programId) {
+        this.programId = programId;
+    }
+
     public String getCode() {
         return code;
     }
