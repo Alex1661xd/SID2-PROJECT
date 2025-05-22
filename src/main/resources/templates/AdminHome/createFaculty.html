@@ -2,50 +2,89 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Crear Grupo</title>
+    <title>Crear Facultad</title>
     <link rel="stylesheet" 
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .form-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 60px;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #343a40;
+        }
+
+        .btn-primary {
+            background-color: #0069d9;
+            border: none;
+        }
+
+        .btn-secondary {
+            border: none;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">Crear Nueva Facultad</h2>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="form-card">
+                <h2 class="text-center mb-4">🏫 Crear Nueva Facultad</h2>
 
-    <form th:action="@{/admin/create-faculty}" th:object="${faculty}" method="post">
-        <div class="mb-3">
-            <label class="form-label">Id Facultad</label>
-            <input type="number" class="form-control" th:field="*{code}" required />
-        </div>
+                <form th:action="@{/admin/create-faculty}" th:object="${faculty}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">ID Facultad</label>
+                        <input type="number" class="form-control" th:field="*{code}" required />
+                    </div>
 
-        <div class="mb-3">
-            <label class="form-label">Nombre Facultad</label>
-            <input type="text" class="form-control" th:field="*{name}" required />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Ciudad</label>
-             <select class="form-select" th:field="*{location}" required>
-                <option th:each="prof : ${city}"
-                        th:value="${prof.name}"
-                        th:text="${prof.name}">
-                </option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Numero de telefono</label>
-            <input type="number" class="form-control" th:field="*{phoneNumber}" placeholder="Ej: +57 314.." required />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Empleado</label>
-            <select class="form-select" th:field="*{employeeId}" required>
-                <option th:each="prof : ${employee}"
-                        th:value="${prof.id}"
-                        th:text="|${prof.firstName} ${prof.lastName}|">
-                </option>
-            </select>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de la Facultad</label>
+                        <input type="text" class="form-control" th:field="*{name}" required />
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Ciudad</label>
+                        <select class="form-select" th:field="*{location}" required>
+                            <option disabled selected value="">Seleccione una ciudad</option>
+                            <option th:each="prof : ${city}"
+                                    th:value="${prof.name}"
+                                    th:text="${prof.name}"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Número de Teléfono</label>
+                        <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="+57 314..." required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Decano Responsable</label>
+                        <select class="form-select" th:field="*{employeeId}" required>
+                            <option disabled selected value="">Seleccione un empleado</option>
+                            <option th:each="prof : ${employee}"
+                                    th:value="${prof.id}"
+                                    th:text="|${prof.firstName} ${prof.lastName}|">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a th:href="@{/admin}" class="btn btn-secondary px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">Crear Facultad</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Crear Facultad</button>
-        <a th:href="@{/admin}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    </div>
 </div>
 </body>
 </html>
