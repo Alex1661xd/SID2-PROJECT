@@ -5,12 +5,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import com.trackademic.service.postgres.GroupService;
 import com.trackademic.model.mongo.EvaluationPlan;
 import com.trackademic.service.mongo.EvaluationPlanService;
 
@@ -20,6 +21,8 @@ public class EvaluationPlanController {
 
     @Autowired
     private EvaluationPlanService planService;
+    @Autowired
+    private GroupService groupService;
 
     @GetMapping
     public String listPlans(Model model) {
@@ -28,11 +31,18 @@ public class EvaluationPlanController {
         return "evaluationPlans/list";
     }
 
-
-    @GetMapping
-    public String showCreateForm(Model model) {
+    @GetMapping("/create")
+    public String showCreateForm(int id, Model model) {
         model.addAttribute("plan", new EvaluationPlan());
+        model.addAttribute("groupId", groupService.getIdentifierGroupById(id));
         return "evaluationPlans/form";
+    }
+
+     @GetMapping("/group/{groupId}")
+    public String getPlansByGroup(@PathVariable String groupId, Model model) {
+        List<EvaluationPlan> plans = planService.getPlansByGroupId(groupId);
+        model.addAttribute("plans", plans);
+        return "plans/list";  // página Thymeleaf o JSP que muestre la lista
     }
 
     @PostMapping
@@ -55,7 +65,7 @@ public class EvaluationPlanController {
         return "evaluationPlans/form";
     }
 
-    @GetMapping("/{id}")
+    @DeleteMapping("/{id}")
     public String deletePlan(@PathVariable String id) {
         planService.deletePlan(id);
         return "redirect:/evaluation-plans";

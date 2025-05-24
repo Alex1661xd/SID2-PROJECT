@@ -17,6 +17,7 @@ public class Group {
     
     @Transient
     private String professorId;
+    
 
     public Integer getNumber() {
         return number;

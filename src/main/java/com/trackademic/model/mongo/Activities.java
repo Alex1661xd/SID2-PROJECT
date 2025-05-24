@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EvaluationActivity {
+public class Activities {
+    private String id;
     private String name;
     private Double percentage;
+    private Double grade; 
 }

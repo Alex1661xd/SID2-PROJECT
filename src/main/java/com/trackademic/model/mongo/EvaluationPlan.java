@@ -22,7 +22,8 @@ public class EvaluationPlan {
     private String groupId; 
     private String title;
 
-    private List<EvaluationActivity> activities;
+    private List<Activities> activities;
+    private List<Comment> comments;
 
     private String createdByStudentId;
 }
