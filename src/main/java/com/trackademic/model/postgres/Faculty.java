@@ -15,6 +15,9 @@ public class Faculty {
     @OneToOne
     @JoinColumn(name = "dean_id")
     private Employee dean;
+    
+    @Transient
+    private String employeeId;
 
     public Integer getCode() {
         return code;
@@ -54,6 +57,14 @@ public class Faculty {
 
     public void setDean(Employee dean) {
         this.dean = dean;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
 
     
