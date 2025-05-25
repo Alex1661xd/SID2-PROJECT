@@ -31,12 +31,6 @@ public class EvaluationPlanController {
         return "evaluationPlans/list";
     }
 
-    @GetMapping("/create")
-    public String showCreateForm(int id, Model model) {
-        model.addAttribute("plan", new EvaluationPlan());
-        model.addAttribute("groupId", groupService.getIdentifierGroupById(id));
-        return "evaluationPlans/form";
-    }
 
      @GetMapping("/group/{groupId}")
     public String getPlansByGroup(@PathVariable String groupId, Model model) {
