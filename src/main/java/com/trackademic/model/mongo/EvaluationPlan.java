@@ -1,5 +1,6 @@
 package com.trackademic.model.mongo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -22,9 +23,9 @@ public class EvaluationPlan {
     private String groupId; 
     private String title;
 
-    private List<Activities> activities;
+    private List<Activities> activities = new ArrayList<>();
     private List<Comment> comments;
     private double totalPercentage;
-    
+
     private String createdByStudentId;
 }

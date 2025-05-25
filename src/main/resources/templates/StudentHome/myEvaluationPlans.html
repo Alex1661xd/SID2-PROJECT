@@ -59,18 +59,20 @@
                     </td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a th:href="@{/evaluation-plans/{id}(id=${plan.id})}" 
-                               class="btn btn-outline-warning btn-sm">
+                           
+                            <a th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}" class="btn btn-outline-warning btn-sm">
                                 Editar
                             </a>
-                            <form th:action="@{/evaluation-plans/{id}(id=${plan.id})}" 
-                                  method="post" style="display:inline;">
-                                <input type="hidden" name="_method" value="delete"/>
-                                <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                        onclick="return confirm('¿Estás seguro de eliminar este plan?')">
-                                    Eliminar
-                                </button>
-                            </form>
+                            
+                           <form th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}" method="post" style="display:inline;">
+                            <input type="hidden" name="_method" value="delete"/> <!-- Simula el método DELETE -->
+                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                    onclick="return confirm('¿Estás seguro de eliminar este plan?')">
+                                Eliminar
+                            </button>
+                        </form>
+
+
                         </div>
                     </td>
                 </tr>

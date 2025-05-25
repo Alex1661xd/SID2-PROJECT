@@ -1,5 +1,6 @@
 package com.trackademic.service.mongo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +26,14 @@ public class EvaluationPlanService {
 
     // Obtiene todos los planes
     public List<EvaluationPlan> getAllPlans() {
-        return planRepository.findAll();
+        List<EvaluationPlan> plans = planRepository.findAll();
+        for (EvaluationPlan plan : plans) {
+            if (plan.getActivities() == null) {
+                plan.setActivities(new ArrayList<>());
+            }
+        }
+
+        return plans;
     }
 
     // Busca por el id
