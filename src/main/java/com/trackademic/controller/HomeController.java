@@ -27,9 +27,10 @@ public class HomeController {
     }
 
     @GetMapping("/joingroup")
-    public String showGroups(Model model) {
-        model.addAttribute("groups", groupService.showAllGroups());
-        return "StudentHome/joinGroup"; // Nueva vista para mostrar grupos
+    public String showGroups(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        String studentEmail = userDetails.getUsername();
+        model.addAttribute("groups", groupService.findGroupsNotJoinedByStudent(studentEmail));
+        return "StudentHome/joinGroup"; // Vista para mostrar solo grupos disponibles para unirse
     }
 
     @PostMapping("/joingroup")

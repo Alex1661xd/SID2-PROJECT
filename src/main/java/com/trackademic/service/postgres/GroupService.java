@@ -53,6 +53,31 @@ public class GroupService {
     return false;
 }
 
+public List<Group> findGroupsNotJoinedByStudent(String studentEmail) {
+    Optional<Student> studentOpt = studentRepository.findByEmail(studentEmail);
+    if (studentOpt.isEmpty()) {
+        return List.of(); // No existe el estudiante
+    }
+    Student student = studentOpt.get();
+
+    // Obtener todos los grupos donde el estudiante está inscrito
+    List<GroupEnrollment> enrolledGroups = groupEnrollmentRepository.findByStudent(student.getId());
+
+    // Extraer IDs de esos grupos
+    List<GroupId> enrolledGroupIds = enrolledGroups.stream()
+        .map(GroupEnrollment::getGroup)
+        .map(group -> new GroupId(group.getNumber(), group.getSubjectCode(), group.getSemester()))
+        .toList();
+
+    // Obtener todos los grupos
+    List<Group> allGroups = groupRepository.findAll();
+
+    // Filtrar todos los grupos para excluir los que el estudiante ya tiene
+    return allGroups.stream()
+        .filter(group -> !enrolledGroupIds.contains(new GroupId(group.getNumber(), group.getSubjectCode(), group.getSemester())))
+        .toList();
+}
+
 
 public List<GroupEnrollment> getEnrollmentsByStudentEmail(String email) {
     Optional<Student> studentOpt = studentRepository.findByEmail(email);
