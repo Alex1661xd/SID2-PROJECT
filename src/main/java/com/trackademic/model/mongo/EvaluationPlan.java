@@ -24,6 +24,7 @@ public class EvaluationPlan {
 
     private List<Activities> activities;
     private List<Comment> comments;
-
+    private double totalPercentage;
+    
     private String createdByStudentId;
 }

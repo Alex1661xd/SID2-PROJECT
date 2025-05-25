@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Plan de Evaluación</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Crear Nuevo Plan de Evaluación</h2>
+
+    <!-- Mostrar mensaje de error si existe -->
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <form th:action="@{/evaluation-plans}" method="post">
+        <!-- Selección de Grupo (solo grupos del estudiante) -->
+        <div class="mb-3">
+            <label for="groupSelect" class="form-label">Seleccionar Grupo</label>
+            <select id="groupSelect" class="form-select" name="groupId" required>
+                <option value="">-- Seleccione un grupo --</option>
+                <option th:each="enrollment : ${studentGroups}" 
+                        th:value="${enrollment.group.number} + '-' + ${enrollment.group.subjectCode} + '-' + ${enrollment.group.semester}"
+                        th:text="'Grupo ' + ${enrollment.group.number} + ' - ' + ${enrollment.group.subjectCode} + ' (' + ${enrollment.group.semester} + ')'">
+                </option>
+            </select>
+        </div>
+
+        <!-- Nombre del Plan -->
+        <div class="mb-3">
+            <label for="planTitle" class="form-label">Título del Plan</label>
+            <input type="text" id="planTitle" class="form-control" name="title" required 
+                   placeholder="Ej: Plan de Evaluación Parcial 1"/>
+        </div>
+
+        <!-- Actividades Dinámicas -->
+        <div class="mb-4">
+            <h5>Actividades de Evaluación</h5>
+            <div id="activitiesContainer">
+                <!-- Actividad inicial -->
+                <div class="activity-item border p-3 mb-3 rounded">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Nombre de la Actividad</label>
+                            <input type="text" name="activities[0].name" class="form-control" 
+                                   placeholder="Ej: Examen Parcial" required/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Porcentaje (%)</label>
+                            <input type="number" name="activities[0].percentage" class="form-control percentage-input" 
+                                   min="1" max="100" step="0.1" placeholder="30" required/>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-activity" 
+                            onclick="removeActivity(this)" style="display: none;">
+                        Eliminar Actividad
+                    </button>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-outline-primary" onclick="addActivity()">
+                + Agregar Actividad
+            </button>
+            
+            <!-- Mostrar suma de porcentajes -->
+            <div class="mt-2">
+                <small class="text-muted">Total: <span id="totalPercentage">0</span>% (debe sumar 100%)</small>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Crear Plan</button>
+            <a th:href="@{/evaluation-plans/my-plans}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+let activityCount = 1;
+
+function addActivity() {
+    const container = document.getElementById('activitiesContainer');
+    const newActivity = document.createElement('div');
+    newActivity.className = 'activity-item border p-3 mb-3 rounded';
+    newActivity.innerHTML = `
+        <div class="row">
+            <div class="col-md-8">
+                <label class="form-label">Nombre de la Actividad</label>
+                <input type="text" name="activities[${activityCount}].name" class="form-control" 
+                       placeholder="Ej: Tarea, Quiz, Proyecto" required/>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Porcentaje (%)</label>
+                <input type="number" name="activities[${activityCount}].percentage" class="form-control percentage-input" 
+                       min="1" max="100" step="0.1" placeholder="20" required/>
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-activity" 
+                onclick="removeActivity(this)">
+            Eliminar Actividad
+        </button>
+    `;
+    container.appendChild(newActivity);
+    activityCount++;
+    updateRemoveButtons();
+    updateTotalPercentage();
+}
+
+function removeActivity(button) {
+    button.closest('.activity-item').remove();
+    updateRemoveButtons();
+    updateTotalPercentage();
+}
+
+function updateRemoveButtons() {
+    const activities = document.querySelectorAll('.activity-item');
+    const removeButtons = document.querySelectorAll('.remove-activity');
+    
+    // Mostrar botón de eliminar solo si hay más de una actividad
+    removeButtons.forEach(btn => {
+        btn.style.display = activities.length > 1 ? 'inline-block' : 'none';
+    });
+}
+
+function updateTotalPercentage() {
+    const percentageInputs = document.querySelectorAll('.percentage-input');
+    let total = 0;
+    
+    percentageInputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        total += value;
+    });
+    
+    const totalSpan = document.getElementById('totalPercentage');
+    totalSpan.textContent = total.toFixed(1);
+    
+    // Cambiar color según si suma 100%
+    if (Math.abs(total - 100) < 0.1) {
+        totalSpan.className = 'text-success fw-bold';
+    } else {
+        totalSpan.className = 'text-warning fw-bold';
+    }
+}
+
+// Event listeners para actualizar total en tiempo real
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('percentage-input')) {
+        updateTotalPercentage();
+    }
+});
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    updateRemoveButtons();
+    updateTotalPercentage();
+});
+</script>
+
+</body>
+</html>
