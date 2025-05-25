@@ -1,5 +1,7 @@
 package com.trackademic.service.postgres;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StudentService implements UserDetailsService{
    private final StudentRepository studentRepository;
+
    private final PasswordEncoder passwordEncoder;
 
    @Override
@@ -35,6 +38,7 @@ public class StudentService implements UserDetailsService{
         student.setPassword(passwordEncoder.encode(student.getPassword()));
         studentRepository.save(student);
     }
+
 
     
 }
