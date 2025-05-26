@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Planes de Evaluación por Grupo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #eef3f7, #ffffff);
+            padding: 40px 20px;
+        }
+
+        .group-header {
+            background: #6c757d;
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border-radius: 16px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .card-body span.badge {
+            font-size: 0.85rem;
+        }
+
+        .card-footer {
+            background-color: #f8f9fa;
+        }
+
+        .btn-sm {
+            border-radius: 20px;
+        }
+
+        .badge.bg-success {
+            font-size: 0.8rem;
+        }
+
+        .text-warning strong {
+            color: #ffc107 !important;
+        }
+
+        .text-success strong {
+            color: #28a745 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="group-header text-center mb-4">
+        <h3 class="mb-0">Planes de Evaluación - Grupo <span th:text="${groupId}"></span></h3>
+    </div>
+
+    <!-- Error -->
+    <div th:if="${errorMessage}" class="alert alert-danger text-center fw-semibold">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Botón crear plan -->
+    <div class="text-end mb-4">
+        <a th:href="@{/evaluation-plans/create}" class="btn btn-success rounded-pill">+ Crear Plan</a>
+    </div>
+
+    <!-- Sin planes -->
+    <div th:if="${#lists.isEmpty(plans)}" class="alert alert-info text-center">
+        <h5>No hay planes de evaluación para este grupo</h5>
+        <a th:href="@{/evaluation-plans/create}" class="btn btn-primary mt-2 rounded-pill">Crear Primer Plan</a>
+    </div>
+
+    <!-- Cards -->
+    <div th:if="${!#lists.isEmpty(plans)}" class="row">
+        <div class="col-md-6 mb-4" th:each="plan : ${plans}">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0" th:text="${plan.title}"></h6>
+                    <span th:if="${#authentication.name == plan.createdByStudentId}" class="badge bg-success">Mi Plan</span>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <small>Creado por: <strong th:text="${plan.createdByStudentId}"></strong></small>
+                    </p>
+
+                    <h6>Actividades:</h6>
+                    <div th:each="activity : ${plan.activities}" class="mb-2 d-flex justify-content-between align-items-center">
+                        <span th:text="${activity.name}"></span>
+                        <span class="badge bg-secondary" th:text="${activity.percentage + '%'}"></span>
+                    </div>
+
+                    <div th:with="total=${#aggregates.sum(plan.activities.![percentage])}">
+                        <small th:classappend="${total == 100 ? 'text-success' : 'text-warning'}">
+                            Total: <strong th:text="${total + '%'}"></strong>
+                            <span th:if="${total == 100}">✓</span>
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card-footer text-end" th:if="${#authentication.name == plan.createdByStudentId}">
+                    <a th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}" class="btn btn-outline-warning btn-sm me-2">
+                        Editar
+                    </a>
+                    <form th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}" method="post" style="display:inline;">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('¿Estás seguro de eliminar este plan?')">
+                            Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volver -->
+    <div class="text-center mt-4">
+        <a th:href="@{/evaluation-plans}" class="btn btn-outline-secondary rounded-pill">← Volver a Todos los Planes</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
