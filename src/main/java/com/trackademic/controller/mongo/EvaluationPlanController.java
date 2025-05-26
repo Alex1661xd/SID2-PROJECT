@@ -213,5 +213,11 @@ public class EvaluationPlanController {
         return "redirect:/evaluation-plans/my-plans";  // Redirige a la lista de planes después de eliminar
     }
 
-
+    @GetMapping("/{id}")
+    public String viewPlanDetail(@PathVariable String id, Model model) {
+        EvaluationPlan plan = planService.getPlanById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
+        model.addAttribute("plan", plan);
+        return "StudentHome/viewPlanDetail";
+    }
 }

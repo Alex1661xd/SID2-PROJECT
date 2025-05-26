@@ -3,14 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <title>Actualizar Plan de Evaluación</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #e3f2fd, #f0f4ff);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px;
+        }
+
+        .form-card {
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-label {
+            font-weight: 600;
+        }
+
+        .activity-item {
+            background-color: #f8f9fa;
+        }
+
+        .text-warning.fw-bold {
+            color: #ffc107 !important;
+        }
+
+        .text-success.fw-bold {
+            color: #198754 !important;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
+<div class="form-card">
     <h2>Actualizar Plan de Evaluación</h2>
 
-    <!-- Mostrar mensaje de error si existe -->
-    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+    <div th:if="${errorMessage}" class="alert alert-danger text-center" role="alert">
         <span th:text="${errorMessage}"></span>
     </div>
 
@@ -19,149 +60,120 @@
 
         <div class="mb-3">
             <label class="form-label">Título del Plan</label>
-            <input type="text" class="form-control" th:field="*{title}" required />
+            <input type="text" class="form-control" th:field="*{title}" required placeholder="Ej: Evaluación Final"/>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-4">
             <label class="form-label">Grupo</label>
-            <select class="form-control" th:field="*{groupId}" required>
+            <select class="form-select" th:field="*{groupId}" required>
                 <option value="">Selecciona un grupo</option>
                 <option th:each="enrollment : ${studentGroups}" 
                         th:value="${enrollment.group.number} + '-' + ${enrollment.group.subjectCode} + '-' + ${enrollment.group.semester}"
-                        th:text="'Grupo ' + ${enrollment.group.number} + ' - ' + ${enrollment.group.subjectCode} + ' (' + ${enrollment.group.semester} + ')'" 
+                        th:text="'Grupo ' + ${enrollment.group.number} + ' - ' + ${enrollment.group.subjectCode} + ' (' + ${enrollment.group.semester} + ')'"
                         th:selected="${enrollment.group.number} == ${plan.groupId}">
                 </option>
             </select>
         </div>
 
-        <!-- Actividades del plan -->
-        <div class="mb-3">
-            <h6>Actividades de Evaluación</h6>
+        <div class="mb-4">
+            <h5 class="mb-3 text-primary">Actividades de Evaluación</h5>
             <div id="activitiesContainer">
-                <!-- Aquí se muestran las actividades existentes -->
                 <div th:each="activity, iterStat : ${plan.activities}">
                     <div class="activity-item border p-3 mb-3 rounded">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-8">
                                 <label class="form-label">Nombre de la Actividad</label>
                                 <input type="text" th:field="*{activities[__${iterStat.index}__].name}" class="form-control" required />
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Porcentaje</label>
+                                <label class="form-label">Porcentaje (%)</label>
                                 <input type="number" th:field="*{activities[__${iterStat.index}__].percentage}" 
-                                       class="form-control percentage-input" 
-                                       min="1" max="100" step="0.1" required />
+                                       class="form-control percentage-input" min="1" max="100" step="0.1" required />
                             </div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-activity" 
-                                onclick="removeActivity(this)">
-                            Eliminar Actividad
-                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-3 remove-activity" onclick="removeActivity(this)">Eliminar Actividad</button>
                     </div>
                 </div>
             </div>
-            
-            <button type="button" class="btn btn-outline-primary" onclick="addActivity()">
-                + Agregar Actividad
-            </button>
-            
-            <!-- Mostrar suma de porcentajes -->
+
+            <button type="button" class="btn btn-outline-primary" onclick="addActivity()">+ Agregar Actividad</button>
+
             <div class="mt-2">
                 <small class="text-muted">Total: <span id="totalPercentage">0</span>% (debe sumar 100%)</small>
             </div>
         </div>
 
-        <!-- Botones de acción -->
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Actualizar Plan</button>
-            <a th:href="@{/evaluation-plans/my-plans}" class="btn btn-secondary">Cancelar</a>
+        <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-success w-50">Actualizar Plan</button>
+            <a th:href="@{/evaluation-plans/my-plans}" class="btn btn-outline-secondary w-50">Cancelar</a>
         </div>
     </form>
 </div>
 
 <script>
-    
-let activityCount = [[${plan.activities.size()}]];
+    let activityCount = [[${plan.activities.size()}]];
 
-function addActivity() {
-    const container = document.getElementById('activitiesContainer');
-    const newActivity = document.createElement('div');
-    newActivity.className = 'activity-item border p-3 mb-3 rounded';
-    newActivity.innerHTML = `
-        <div class="row">
-            <div class="col-md-8">
-                <label class="form-label">Nombre de la Actividad</label>
-                <input type="text" name="activities[${activityCount}].name" class="form-control" 
-                       placeholder="Ej: Tarea, Quiz, Proyecto" required/>
+    function addActivity() {
+        const container = document.getElementById('activitiesContainer');
+        const newActivity = document.createElement('div');
+        newActivity.className = 'activity-item border p-3 mb-3 rounded';
+        newActivity.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Nombre de la Actividad</label>
+                    <input type="text" name="activities[${activityCount}].name" class="form-control" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Porcentaje (%)</label>
+                    <input type="number" name="activities[${activityCount}].percentage" class="form-control percentage-input" 
+                           min="1" max="100" step="0.1" required />
+                </div>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">Porcentaje (%)</label>
-                <input type="number" name="activities[${activityCount}].percentage" class="form-control percentage-input" 
-                       min="1" max="100" step="0.1" placeholder="20" required/>
-            </div>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-activity" 
-                onclick="removeActivity(this)">
-            Eliminar Actividad
-        </button>
-    `;
-    container.appendChild(newActivity);
-    activityCount++;
-    updateRemoveButtons();
-    updateTotalPercentage();
-}
-
-// Función para eliminar una actividad
-function removeActivity(button) {
-    button.closest('.activity-item').remove();
-    updateRemoveButtons();
-    updateTotalPercentage();
-}
-
-// Función para actualizar los botones de eliminar
-function updateRemoveButtons() {
-    const activities = document.querySelectorAll('.activity-item');
-    const removeButtons = document.querySelectorAll('.remove-activity');
-    
-    // Mostrar botón de eliminar solo si hay más de una actividad
-    removeButtons.forEach(btn => {
-        btn.style.display = activities.length > 1 ? 'inline-block' : 'none';
-    });
-}
-
-// Función para actualizar el total de porcentajes
-function updateTotalPercentage() {
-    const percentageInputs = document.querySelectorAll('.percentage-input');
-    let total = 0;
-    
-    percentageInputs.forEach(input => {
-        const value = parseFloat(input.value) || 0;
-        total += value;
-    });
-    
-    const totalSpan = document.getElementById('totalPercentage');
-    totalSpan.textContent = total.toFixed(1);
-    
-    // Cambiar color según si suma 100%
-    if (Math.abs(total - 100) < 0.1) {
-        totalSpan.className = 'text-success fw-bold';
-    } else {
-        totalSpan.className = 'text-warning fw-bold';
-    }
-}
-
-// Event listeners para actualizar total en tiempo real
-document.addEventListener('input', function(e) {
-    if (e.target.classList.contains('percentage-input')) {
+            <button type="button" class="btn btn-sm btn-outline-danger mt-3 remove-activity" onclick="removeActivity(this)">
+                Eliminar Actividad
+            </button>
+        `;
+        container.appendChild(newActivity);
+        activityCount++;
+        updateRemoveButtons();
         updateTotalPercentage();
     }
-});
 
-// Inicializar
-document.addEventListener('DOMContentLoaded', function() {
-    updateRemoveButtons();
-    updateTotalPercentage();
-});
+    function removeActivity(button) {
+        button.closest('.activity-item').remove();
+        updateRemoveButtons();
+        updateTotalPercentage();
+    }
+
+    function updateRemoveButtons() {
+        const items = document.querySelectorAll('.activity-item');
+        const buttons = document.querySelectorAll('.remove-activity');
+        buttons.forEach(btn => btn.style.display = items.length > 1 ? 'inline-block' : 'none');
+    }
+
+    function updateTotalPercentage() {
+        const inputs = document.querySelectorAll('.percentage-input');
+        let total = 0;
+        inputs.forEach(input => {
+            const val = parseFloat(input.value) || 0;
+            total += val;
+        });
+
+        const totalSpan = document.getElementById('totalPercentage');
+        totalSpan.textContent = total.toFixed(1);
+        totalSpan.className = Math.abs(total - 100) < 0.1 ? 'text-success fw-bold' : 'text-warning fw-bold';
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('percentage-input')) {
+            updateTotalPercentage();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateRemoveButtons();
+        updateTotalPercentage();
+    });
 </script>
 
 </body>
