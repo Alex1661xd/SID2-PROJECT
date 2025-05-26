@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.trackademic.model.mongo.EvaluationPlan;
-import com.trackademic.model.postgres.Group;
 import com.trackademic.model.postgres.GroupEnrollment;
 import com.trackademic.service.mongo.EvaluationPlanService;
 import com.trackademic.service.postgres.GroupService;
@@ -30,24 +29,32 @@ public class EvaluationPlanController {
     @Autowired
     private GroupService groupService;
 
+    
     @GetMapping
     public String listPlans(Model model) {
         try {
-            List<EvaluationPlan> plans = planService.getAllPlans();
-            List<Group> allGroups = groupService.showAllGroups();
+            String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<GroupEnrollment> enrollments = groupService.getEnrollmentsByStudentEmail(studentEmail);
 
-            // Obtener el usuario actual
-            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            List<String> groupIds = enrollments.stream()
+                .map(enrollment -> enrollment.getGroup().getNumber() + "-" +
+                                enrollment.getGroup().getSubjectCode() + "-" +
+                                enrollment.getGroup().getSemester())
+                .toList();
 
+            List<EvaluationPlan> plans = planService.getPlansByGroupIds(groupIds);
+            System.out.println("Group IDs del estudiante: " + groupIds);
+
+            // 👇 este es el atributo que necesitas para el <select>
+            model.addAttribute("studentGroups", enrollments);
             model.addAttribute("plans", plans);
-            model.addAttribute("allGroups", allGroups);
-            model.addAttribute("currentUser", currentUser); 
+            model.addAttribute("currentUser", studentEmail);
 
             return "StudentHome/viewEvaluationPlans";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Error al cargar los planes: " + e.getMessage());
             model.addAttribute("plans", List.of());
-            model.addAttribute("allGroups", List.of());
+            model.addAttribute("studentGroups", List.of()); // Agrega también en error
             return "StudentHome/viewEvaluationPlans";
         }
     }

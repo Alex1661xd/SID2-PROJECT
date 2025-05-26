@@ -41,6 +41,11 @@ public class EvaluationPlanService {
         return planRepository.findById(id);
     }
 
+    public List<EvaluationPlan> getPlansByGroupIds(List<String> groupIds) {
+        return planRepository.findByGroupIdIn(groupIds);
+    }
+
+
     // Busca por grupo
     public List<EvaluationPlan> getPlansByGroupId(String groupId) {
         return planRepository.findByGroupId(groupId);

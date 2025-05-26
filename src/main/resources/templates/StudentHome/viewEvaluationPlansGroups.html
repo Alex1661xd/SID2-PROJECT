@@ -7,132 +7,75 @@
 </head>
 <body>
 <div class="container mt-5">
-    <!-- Header del grupo -->
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">
-                Planes de Evaluación - Grupo <span th:text="${groupId}"></span>
-            </h3>
+        <div class="card-header bg-secondary text-white">
+            <h3 class="mb-0">Planes de Evaluación - Grupo <span th:text="${groupId}"></span></h3>
         </div>
     </div>
 
-    <!-- Mensajes -->
+    <!-- Error -->
     <div th:if="${errorMessage}" class="alert alert-danger">
         <span th:text="${errorMessage}"></span>
     </div>
 
     <!-- Botón crear plan -->
     <div class="mb-4">
-        <a th:href="@{/evaluation-plans/create}" class="btn btn-success">
-            + Crear Plan para este Grupo
-        </a>
+        <a th:href="@{/evaluation-plans/create}" class="btn btn-success">+ Crear Plan</a>
     </div>
 
-    <!-- Mensaje cuando no hay planes -->
+    <!-- Sin planes -->
     <div th:if="${#lists.isEmpty(plans)}" class="alert alert-info text-center">
         <h5>No hay planes de evaluación para este grupo</h5>
-        <p>Sé el primero en proponer un plan de evaluación.</p>
-        <a th:href="@{/evaluation-plans/create}" class="btn btn-primary">Crear Primer Plan</a>
+        <a th:href="@{/evaluation-plans/create}" class="btn btn-primary mt-2">Crear Primer Plan</a>
     </div>
 
-    <!-- Cards de planes -->
+    <!-- Cards -->
     <div th:if="${!#lists.isEmpty(plans)}" class="row">
         <div class="col-md-6 mb-3" th:each="plan : ${plans}">
             <div class="card">
                 <div class="card-header d-flex justify-content-between">
                     <h6 class="mb-0" th:text="${plan.title}"></h6>
-                    <span th:if="${#authentication.name == plan.createdByStudentId}" 
-                          class="badge bg-success">Mi Plan</span>
+                    <span th:if="${#authentication.name == plan.createdByStudentId}" class="badge bg-success">Mi Plan</span>
                 </div>
-                
                 <div class="card-body">
-                    <p class="text-muted mb-3">
+                    <p class="text-muted mb-2">
                         <small>Creado por: <strong th:text="${plan.createdByStudentId}"></strong></small>
                     </p>
-                    
-                    <!-- Actividades -->
                     <h6>Actividades:</h6>
-                    <div class="mb-3">
-                        <div th:each="activity : ${plan.activities}" 
-                             class="d-flex justify-content-between mb-1">
-                            <span th:text="${activity.name}"></span>
-                            <span class="badge bg-secondary" th:text="${activity.percentage} + '%'"></span>
-                        </div>
+                    <div th:each="activity : ${plan.activities}" class="mb-2 d-flex justify-content-between">
+                        <span th:text="${activity.name}"></span>
+                        <span class="badge bg-secondary" th:text="${activity.percentage + '%'}"></span>
                     </div>
-                    
-                    <!-- Total de porcentajes -->
                     <div th:with="total=${#aggregates.sum(plan.activities.![percentage])}">
                         <small th:classappend="${total == 100 ? 'text-success' : 'text-warning'}">
                             Total: <strong th:text="${total} + '%'"></strong>
                             <span th:if="${total == 100}">✓</span>
-                            <span th:if="${total != 100}">⚠️</span>
+                            <span th:if="${total != 100}"></span>
                         </small>
                     </div>
                 </div>
-                
-                <!-- Acciones -->
-                <div class="card-footer">
-                    <div class="btn-group w-100">
-                        <button type="button" class="btn btn-outline-info btn-sm" 
-                                th:onclick="'showModal(\'' + ${plan.id} + '\', \'' + ${plan.title} + '\')'">
-                            Ver Detalles
-                        </button>
-                        
-                        <!-- Solo para el creador -->
-                        <div th:if="${#authentication.name == plan.createdByStudentId}">
-                            <a th:href="@{/evaluation-plans/{id}(id=${plan.id})}" 
-                               class="btn btn-outline-warning btn-sm">Editar</a>
-                        </div>
-                    </div>
+                <div class="card-footer text-end" th:if="${#authentication.name == plan.createdByStudentId}">
+                    <a th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}" class="btn btn-outline-warning btn-sm">
+                                Editar
+                            </a>
+                            
+                           <form th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}" method="post" style="display:inline;">
+                                <input type="hidden" name="_method" value="delete"/> <!-- Simula el método DELETE -->
+                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        onclick="return confirm('¿Estás seguro de eliminar este plan?')">
+                                    Eliminar
+                                </button>
+                            </form>
                 </div>
             </div>
         </div>
     </div>
 
+
     <!-- Navegación -->
     <div class="mt-4">
-        <a th:href="@{/evaluation-plans}" class="btn btn-secondary">← Todos los Planes</a>
-        <a th:href="@{/evaluation-plans/my-plans}" class="btn btn-outline-primary ms-2">Mis Planes</a>
+        <a th:href="@{/evaluation-plans}" class="btn btn-outline-secondary">← Volver a Todos los Planes</a>
     </div>
 </div>
-
-<!-- Modal detalles -->
-<div class="modal fade" id="detailModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailTitle"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detailBody"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-function showModal(planId, planTitle) {
-    document.getElementById('detailTitle').textContent = planTitle;
-    
-    // Buscar la card del plan
-    const planCard = document.querySelector(`[onclick*="${planId}"]`).closest('.card');
-    const activities = planCard.querySelectorAll('.d-flex.justify-content-between');
-    
-    let html = '<div class="table-responsive"><table class="table table-sm">';
-    html += '<thead><tr><th>Actividad</th><th>Porcentaje</th></tr></thead><tbody>';
-    
-    activities.forEach(activity => {
-        const name = activity.children[0].textContent;
-        const percentage = activity.children[1].textContent;
-        html += `<tr><td>${name}</td><td>${percentage}</td></tr>`;
-    });
-    
-    html += '</tbody></table></div>';
-    document.getElementById('detailBody').innerHTML = html;
-    
-    new bootstrap.Modal(document.getElementById('detailModal')).show();
-}
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
