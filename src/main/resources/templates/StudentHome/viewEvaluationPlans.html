@@ -8,85 +8,150 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        body {
+            background: linear-gradient(to right, #f2f6fc, #ffffff);
+            padding: 40px 20px;
+        }
+
+        .main-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .table thead {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .form-select, .btn {
+            border-radius: 8px;
+        }
+
+        .btn-outline-info {
+            border-radius: 20px;
+        }
+
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: none;
+        }
+
+        .modal-title {
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .modal-body ul {
+            margin-bottom: 0;
+        }
+
+        .back-to-home {
+            display: inline-flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .back-to-home i {
+            margin-right: 5px;
+        }
+
+        .badge {
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-<h1>Planes de Evaluación de mis Grupos</h1>
-<a th:href="@{/evaluation-plans/create}" class="btn btn-primary">+ Crear Nuevo Plan</a>
+<div class="main-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Planes de Evaluación de mis Grupos</h2>
+        <a th:href="@{/evaluation-plans/create}" class="btn btn-success">+ Crear Nuevo Plan</a>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Ver planes de un grupo específico:</label>
+        <select id="groupSelect" class="form-select" onchange="filterByGroup()">
+            <option value="">Selecciona un grupo...</option>
+            <option th:each="group : ${studentGroups}"
+                    th:value="${group.groupNumber + '-' + group.groupSubjectCode + '-' + group.groupSemester}"
+                    th:text="${group.groupNumber + ' - ' + group.groupSubjectCode + ' - ' + group.groupSemester}"></option>
+        </select>
+    </div>
 
-<div class="mt-3">
-    <label>Ver planes de un grupo específico:</label>
-    <select id="groupSelect" onchange="filterByGroup()">
-        <option value="">Selecciona un grupo...</option>
-        <option th:each="group : ${studentGroups}"
-                th:value="${group.groupNumber + '-' + group.groupSubjectCode + '-' + group.groupSemester}"
-                th:text="${group.groupNumber + ' - ' + group.groupSubjectCode + ' - ' + group.groupSemester}"></option>
-    </select>
-</div>
+    <div th:if="${plans.isEmpty()}" class="alert alert-info mt-3">
+        No hay planes de evaluación disponibles en tus grupos.
+    </div>
 
-<div th:if="${plans.isEmpty()}" class="alert alert-info mt-3">
-    No hay planes de evaluación disponibles en tus grupos.
-</div>
+    <table th:if="${not plans.isEmpty()}" class="table table-striped mt-3" id="plansTable">
+        <thead>
+        <tr>
+            <th>Título del Plan</th>
+            <th>Grupo</th>
+            <th>Actividades</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="plan : ${plans}" th:id="'row-' + ${plan.id}">
+            <td th:text="${plan.title}"></td>
+            <td><span class="badge bg-primary" th:text="${plan.groupId}"></span></td>
+            <td>
+                <span th:text="${#lists.size(plan.activities)} + ' actividades'"></span>
+                <ul th:id="'activities-' + ${plan.id}" style="display:none;">
+                    <li th:each="activity : ${plan.activities}"
+                        th:text="${activity.name} + ' (' + ${activity.percentage} + '%)' +
+                                        (${activity.grade != null} ? ' - Nota: ' + ${activity.grade} : '')"></li>
+                </ul>
+            </td>
+            <td>
+                <a th:href="@{#}" class="btn btn-sm btn-info"
+                th:attr="data-id=${plan.id},data-title=${plan.title}"
+                onclick="openModalFromAttributes(this)">Ver Detalles</a>
+                <a th:if="${plan.createdByStudentId == currentUser}"
+                th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}"
+                class="btn btn-sm btn-warning">Editar</a>
+                <form th:if="${plan.createdByStudentId == currentUser}"
+                    th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}"
+                    method="post" style="display:inline;">
+                    <input type="hidden" name="_method" value="DELETE"/>
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('¿Estás seguro de eliminar este plan?')">Eliminar</button>
+                </form>
+                <span th:if="${plan.createdByStudentId != currentUser}"
+                    class="badge bg-secondary">Solo lectura</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
-<table th:if="${not plans.isEmpty()}" class="table table-striped mt-3" id="plansTable">
-    <thead>
-    <tr>
-        <th>Título del Plan</th>
-        <th>Grupo</th>
-        <th>Actividades</th>
-        <th>Acciones</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="plan : ${plans}" th:id="'row-' + ${plan.id}">
-        <td th:text="${plan.title}"></td>
-        <td><span class="badge bg-primary" th:text="${plan.groupId}"></span></td>
-        <td>
-            <span th:text="${#lists.size(plan.activities)} + ' actividades'"></span>
-            <ul th:id="'activities-' + ${plan.id}" style="display:none;">
-                <li th:each="activity : ${plan.activities}"
-                    th:text="${activity.name} + ' (' + ${activity.percentage} + '%)' +
-                                    (${activity.grade != null} ? ' - Nota: ' + ${activity.grade} : '')"></li>
-            </ul>
-        </td>
-        <td>
-            <a th:href="@{#}" class="btn btn-sm btn-info"
-               th:attr="data-id=${plan.id},data-title=${plan.title}"
-               onclick="openModalFromAttributes(this)">Ver Detalles</a>
-            <a th:if="${plan.createdByStudentId == currentUser}"
-               th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}"
-               class="btn btn-sm btn-warning">Editar</a>
-            <form th:if="${plan.createdByStudentId == currentUser}"
-                  th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}"
-                  method="post" style="display:inline;">
-                <input type="hidden" name="_method" value="DELETE"/>
-                <button type="submit" class="btn btn-sm btn-danger"
-                        onclick="return confirm('¿Estás seguro de eliminar este plan?')">Eliminar</button>
-            </form>
-            <span th:if="${plan.createdByStudentId != currentUser}"
-                  class="badge bg-secondary">Solo lectura</span>
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <a th:href="@{/home}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 
-<a th:href="@{/home}" class="btn btn-secondary mt-3">Volver al Inicio</a>
-
-<!-- Modal -->
-<div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="planModalLabel">Detalles del Plan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <p>Cargando detalles...</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    <!-- Modal -->
+    <div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planModalLabel">Detalles del Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <p>Cargando detalles...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
-    </div>
+    </div> 
 </div>
 
 <script>
@@ -125,10 +190,9 @@
 
         content += `</ul></div>`;
 
-        // Fetch CSRF token from meta tag
+        
         const csrfToken = $('meta[name="_csrf"]').attr('content');
 
-        // Fetch comments via AJAX
         $.ajax({
             url: `/evaluation-plans/${planId}/data`,
             method: 'GET',
