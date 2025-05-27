@@ -35,3 +35,17 @@ input[type="submit"]:hover {
     color: red;
     font-size: 0.8em;
 }
+.comment {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+}
+.alert-success, .alert-danger {
+    margin: 10px 0;
+}
+.modal-body form {
+    margin-top: 10px;
+}
+.modal-body .form-control {
+    width: 100%;
+}

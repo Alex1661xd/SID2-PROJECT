@@ -1,33 +1,40 @@
 package com.trackademic.controller.mongo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.trackademic.model.mongo.Comment;
+import com.trackademic.model.postgres.Student;
+import com.trackademic.repository.postgres.StudentRepository;
+import com.trackademic.service.mongo.CommentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.trackademic.model.mongo.EvaluationPlan;
 import com.trackademic.model.postgres.GroupEnrollment;
 import com.trackademic.service.mongo.EvaluationPlanService;
 import com.trackademic.service.postgres.GroupService;
+import jakarta.validation.ValidationException;
 
 @Controller
 @RequestMapping("/evaluation-plans")
+@RequiredArgsConstructor
 public class EvaluationPlanController {
 
     @Autowired
     private EvaluationPlanService planService;
     @Autowired
     private GroupService groupService;
+    private final CommentService commentService;
+    private final StudentRepository studentRepository;
 
     
     @GetMapping
@@ -66,7 +73,7 @@ public class EvaluationPlanController {
             List<EvaluationPlan> plans = planService.getPlansByGroupId(groupId);
             model.addAttribute("plans", plans);
             model.addAttribute("groupId", groupId);
-            
+            model.addAttribute("currentUser", SecurityContextHolder.getContext().getAuthentication().getName()); // ADD THIS
             System.out.println("Planes encontrados para grupo " + groupId + ": " + plans.size());
             return "StudentHome/viewEvaluationPlansGroups";
         } catch (Exception e) {
@@ -75,6 +82,7 @@ public class EvaluationPlanController {
             model.addAttribute("errorMessage", "Error al cargar los planes del grupo: " + e.getMessage());
             model.addAttribute("plans", List.of());
             model.addAttribute("groupId", groupId);
+            model.addAttribute("currentUser", SecurityContextHolder.getContext().getAuthentication().getName()); // ADD THIS
             return "StudentHome/viewEvaluationPlansGroups";
         }
     }
@@ -219,5 +227,54 @@ public class EvaluationPlanController {
             .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
         model.addAttribute("plan", plan);
         return "StudentHome/viewPlanDetail";
+    }
+
+    // NEW COMMENT ENDPOINTS
+    @GetMapping("/{id}/data")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getPlanComments(@PathVariable String id) {
+        List<Comment> comments = commentService.getCommentsByPlanId(id);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Student student = studentRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("comments", comments);
+        response.put("currentStudentId", student.getId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/comments")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> addComment(@PathVariable String id, @RequestParam String content) {
+        try {
+            commentService.addComment(id, content);
+            return ResponseEntity.ok(Map.of("message", "Comentario añadido exitosamente"));
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/comments/{commentId}/edit")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> editComment(@PathVariable String commentId, @RequestParam String content) {
+        try {
+            commentService.editComment(commentId, content);
+            return ResponseEntity.ok(Map.of("message", "Comentario actualizado exitosamente"));
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/comments/{commentId}/delete")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> deleteComment(@PathVariable String commentId) {
+        try {
+            commentService.deleteComment(commentId);
+            return ResponseEntity.ok(Map.of("message", "Comentario eliminado exitosamente"));
+        } catch (ValidationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
     }
 }
