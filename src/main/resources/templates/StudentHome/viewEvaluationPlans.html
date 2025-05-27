@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
     <title>Planes de Evaluación de mis Grupos</title>
+    <link rel="stylesheet" href="/css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         body {
             background: linear-gradient(to right, #f2f6fc, #ffffff);
@@ -43,7 +47,7 @@
         }
 
         .modal-title {
-            color: #0d6efd;
+            color: #000000;
             font-weight: 600;
         }
 
@@ -67,104 +71,97 @@
     </style>
 </head>
 <body>
-
 <div class="main-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Planes de Evaluación de mis Grupos</h2>
         <a th:href="@{/evaluation-plans/create}" class="btn btn-success">+ Crear Nuevo Plan</a>
     </div>
-
-    <form method="get" class="mb-4">
-        <label for="groupSelect" class="form-label">Ver planes de un grupo específico:</label>
-        <div class="input-group">
-            <select id="groupSelect" name="groupId" class="form-select"
-                    onchange="if(this.value) window.location.href = '/evaluation-plans/group/' + this.value;">
-                <option value="" disabled selected>Selecciona un grupo...</option>
-                <option th:each="enroll : ${studentGroups}"
-                        th:value="${enroll.group.number + '-' + enroll.group.subjectCode + '-' + enroll.group.semester}"
-                        th:text="${enroll.group.subjectCode + ' - Grupo ' + enroll.group.number + ' (' + enroll.group.semester + ')'}">
-                </option>
-            </select>
-        </div>
-    </form>
-
-    <div th:if="${#lists.isEmpty(plans)}" class="alert alert-info text-center">
-        <h5>No hay planes de evaluación disponibles en tus grupos.</h5>
+    
+    <div class="mb-3">
+        <label class="form-label">Ver planes de un grupo específico:</label>
+        <select id="groupSelect" class="form-select" onchange="filterByGroup()">
+            <option value="">Selecciona un grupo...</option>
+            <option th:each="group : ${studentGroups}"
+                    th:value="${group.groupNumber + '-' + group.groupSubjectCode + '-' + group.groupSemester}"
+                    th:text="${group.groupNumber + ' - ' + group.groupSubjectCode + ' - ' + group.groupSemester}"></option>
+        </select>
     </div>
 
-    <div th:if="${!#lists.isEmpty(plans)}" class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
-            <tr>
-                <th>Título del Plan</th>
-                <th>Grupo</th>
-                <th>Actividades</th>
-                <th>Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="plan : ${plans}" th:id="'row-' + ${plan.id}">
-                <td><strong th:text="${plan.title}"></strong></td>
-                <td><span class="badge bg-primary" th:text="${plan.groupId}"></span></td>
-                <td>
-                    <span class="badge bg-secondary" th:text="${#lists.size(plan.activities)} + ' actividades'"></span>
-                    <ul class="d-none" th:id="'activities-' + ${plan.id}">
-                        <li th:each="a : ${plan.activities}" th:text="${a.name + ' (' + a.percentage + '%)'}"></li>
-                    </ul>
-                </td>
-                <td>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-info btn-sm"
-                                th:attr="data-id=${plan.id}, data-title=${plan.title}"
-                                onclick="openModalFromAttributes(this)">
-                            Ver Detalles
-                        </button>
-
-                        <div th:if="${#authentication.name == plan.createdByStudentId}" class="d-flex gap-2">
-                            <a th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}" class="btn btn-outline-warning btn-sm">Editar</a>
-                            <form th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}" method="post">
-                                <input type="hidden" name="_method" value="delete"/>
-                                <button type="submit" class="btn btn-outline-danger btn-sm"
-                                        onclick="return confirm('¿Estás seguro de eliminar este plan?')">
-                                    Eliminar
-                                </button>
-                            </form>
-                        </div>
-
-                        <div th:unless="${#authentication.name == plan.createdByStudentId}">
-                            <span class="text-muted small">Solo lectura</span>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+    <div th:if="${plans.isEmpty()}" class="alert alert-info mt-3">
+        No hay planes de evaluación disponibles en tus grupos.
     </div>
 
-    <div class="mt-4">
-        <a th:href="@{/home}" class="btn btn-outline-primary back-to-home">
-            <i class="bi bi-arrow-left"></i> Volver al Inicio
-        </a>
-    </div>
-</div>
+    <table th:if="${not plans.isEmpty()}" class="table table-striped mt-3" id="plansTable">
+        <thead>
+        <tr>
+            <th>Título del Plan</th>
+            <th>Grupo</th>
+            <th>Actividades</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="plan : ${plans}" th:id="'row-' + ${plan.id}">
+            <td th:text="${plan.title}"></td>
+            <td><span class="badge bg-primary" th:text="${plan.groupId}"></span></td>
+            <td>
+                <span th:text="${#lists.size(plan.activities)} + ' actividades'"></span>
+                <ul th:id="'activities-' + ${plan.id}" style="display:none;">
+                    <li th:each="activity : ${plan.activities}"
+                        th:text="${activity.name} + ' (' + ${activity.percentage} + '%)' +
+                                        (${activity.grade != null} ? ' - Nota: ' + ${activity.grade} : '')"></li>
+                </ul>
+            </td>
+            <td>
+                <a th:href="@{#}" class="btn btn-sm btn-info"
+                th:attr="data-id=${plan.id},data-title=${plan.title}"
+                onclick="openModalFromAttributes(this)">Ver Detalles</a>
+                <a th:if="${plan.createdByStudentId == currentUser}"
+                th:href="@{/evaluation-plans/edit/{id}(id=${plan.id})}"
+                class="btn btn-sm btn-warning">Editar</a>
+                <form th:if="${plan.createdByStudentId == currentUser}"
+                    th:action="@{/evaluation-plans/delete/{id}(id=${plan.id})}"
+                    method="post" style="display:inline;">
+                    <input type="hidden" name="_method" value="DELETE"/>
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('¿Estás seguro de eliminar este plan?')">Eliminar</button>
+                </form>
+                <span th:if="${plan.createdByStudentId != currentUser}"
+                    class="badge bg-secondary">Solo lectura</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 
-<!-- Modal para ver detalles -->
-<div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4">
-            <div class="modal-header">
-                <h5 class="modal-title" id="planModalLabel">Detalles del Plan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Se rellena por JS -->
+    <a th:href="@{/home}" class="btn btn-secondary mt-3">Volver al Inicio</a>
+
+    <!-- Modal -->
+    <div class="modal fade" id="planModal" tabindex="-1" aria-labelledby="planModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="planModalLabel">Detalles del Plan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <p>Cargando detalles...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
-    </div>
+    </div> 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Set up CSRF token for AJAX requests
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader($('meta[name="_csrf_header"]').attr('content'), $('meta[name="_csrf"]').attr('content'));
+        }
+    });
+
     function openModalFromAttributes(button) {
         const planId = button.getAttribute("data-id");
         const planTitle = button.getAttribute("data-title");
@@ -172,33 +169,131 @@
         const activitiesList = document.querySelector(`#activities-${planId}`).children;
 
         let content = `
-            <div class="mb-3">
-                <h6 class="text-primary">Grupo:</h6>
-                <p><span class="badge bg-primary">${group}</span></p>
-            </div>
-            <div class="mb-3">
-                <h6 class="text-primary">Actividades</h6>
-                <ul class="list-group">
-        `;
+                <div class="mb-3">
+                    <h6 class="text-primary">Grupo:</h6>
+                    <p><span class="badge bg-primary">${group}</span></p>
+                </div>
+                <div class="mb-3">
+                    <h6 class="text-primary">Actividades</h6>
+                    <ul class="list-group">
+            `;
 
         for (let i = 0; i < activitiesList.length; i++) {
             const text = activitiesList[i].textContent;
             const [name, percentRaw] = text.split(" (");
             const percent = percentRaw ? percentRaw.replace(")", "") : "0%";
-
             content += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>${name}</span>
-                            <span class="badge bg-secondary">${percent}</span>
-                        </li>`;
+                                <span>${name}</span>
+                                <span class="badge bg-secondary">${percent}</span>
+                            </li>`;
         }
 
         content += `</ul></div>`;
 
-        document.getElementById("planModalLabel").textContent = planTitle;
-        document.getElementById("modalBody").innerHTML = content;
-        new bootstrap.Modal(document.getElementById("planModal")).show();
+        
+        const csrfToken = $('meta[name="_csrf"]').attr('content');
+
+        $.ajax({
+            url: `/evaluation-plans/${planId}/data`,
+            method: 'GET',
+            success: function(data) {
+                const comments = data.comments;
+                const currentStudentId = data.currentStudentId;
+
+                content += `
+                        <div class="mb-3">
+                            <h6 class="text-primary">Comentarios</h6>
+                            <div id="commentMessages"></div>
+                            ${comments.length === 0 ? '<p>No hay comentarios aún.</p>' : ''}
+                            <div class="comments-list">
+                    `;
+                comments.forEach(comment => {
+                    content += `
+                            <div class="comment mb-2">
+                                <p><strong>Estudiante ID:</strong> ${comment.studentId}</p>
+                                <p>${comment.content}</p>
+                                <p><em>${new Date(comment.timestamp).toLocaleString()}</em></p>
+                                ${comment.studentId == currentStudentId ? `
+                                    <form class="edit-comment-form" action="/evaluation-plans/comments/${comment.id}/edit" method="post">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <textarea name="content" rows="2" class="form-control mb-1" required maxlength="1000">${comment.content}</textarea>
+                                        <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
+                                    </form>
+                                    <form class="delete-comment-form" action="/evaluation-plans/comments/${comment.id}/delete" method="post">
+                                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('¿Estás seguro de eliminar este comentario?')">Eliminar</button>
+                                    </form>
+                                ` : ''}
+                                <hr>
+                            </div>
+                        `;
+                });
+                content += `
+                            </div>
+                            <div sec:authorize="isAuthenticated()">
+                                <h6>Agregar Comentario</h6>
+                                <form class="add-comment-form" action="/evaluation-plans/${planId}/comments" method="post">
+                                    <input type="hidden" name="_csrf" value="${csrfToken}">
+                                    <textarea name="content" rows="4" class="form-control mb-1" required maxlength="1000"></textarea>
+                                    <button type="submit" class="btn btn-primary">Enviar Comentario</button>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+
+                document.getElementById("planModalLabel").textContent = planTitle;
+                document.getElementById("modalBody").innerHTML = content;
+                const modal = new bootstrap.Modal(document.getElementById("planModal"));
+                modal.show();
+
+                // Handle comment form submissions via AJAX
+                $('.add-comment-form, .edit-comment-form, .delete-comment-form').on('submit', function(e) {
+                    e.preventDefault();
+                    const form = $(this);
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'POST',
+                        data: form.serialize(),
+                        success: function(response) {
+                            $('#commentMessages').html(`<div class="alert alert-success">${response.message}</div>`).show().fadeOut(3000);
+                            modal.hide(); // Close the modal before refreshing
+                            openModalFromAttributes(button); // Refresh modal content
+                        },
+                        error: function(xhr) {
+                            $('#commentMessages').html(`<div class="alert alert-danger">${xhr.responseJSON?.message || 'Error al procesar el comentario'}</div>`).show().fadeOut(3000);
+                        }
+                    });
+                });
+
+                // Restore focus to the triggering button when modal is closed
+                $('#planModal').on('hidden.bs.modal', function () {
+                    button.focus();
+                });
+            },
+            error: function() {
+                content += `<p>Error al cargar comentarios.</p>`;
+                document.getElementById("planModalLabel").textContent = planTitle;
+                document.getElementById("modalBody").innerHTML = content;
+                const modal = new bootstrap.Modal(document.getElementById("planModal"));
+                modal.show();
+
+                // Restore focus to the triggering button when modal is closed
+                $('#planModal').on('hidden.bs.modal', function () {
+                    button.focus();
+                });
+            }
+        });
+    }
+
+    function filterByGroup() {
+        var groupId = $('#groupSelect').val();
+        if (groupId) {
+            window.location.href = '/evaluation-plans/group/' + groupId;
+        } else {
+            window.location.href = '/evaluation-plans';
+        }
     }
 </script>
-
 </body>
 </html>

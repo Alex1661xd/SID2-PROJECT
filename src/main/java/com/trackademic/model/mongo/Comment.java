@@ -20,7 +20,7 @@ public class Comment {
     private String id;
 
     private String planId;
-    private String studentId;
+    private Long studentId;
     private String content;
     private LocalDateTime timestamp;
 }
