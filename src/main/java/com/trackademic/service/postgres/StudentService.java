@@ -40,5 +40,9 @@ public class StudentService implements UserDetailsService{
     }
 
 
+    public Student getStudentbyid(String email) {
+        return studentRepository.findByEmail(email).get();
+    }
+
     
 }

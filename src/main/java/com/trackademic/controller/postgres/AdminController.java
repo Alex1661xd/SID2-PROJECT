@@ -1,4 +1,4 @@
-package com.trackademic.controller;
+package com.trackademic.controller.postgres;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

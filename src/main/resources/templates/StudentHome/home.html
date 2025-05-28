@@ -61,7 +61,8 @@
 <body>
 
 <div class="panel" sec:authorize="isAuthenticated()">
-    <h2>Hola, <span th:text="${#authentication.getName()}"></span></h2>
+    <h2>Hola, <span th:text="${name + ' ' + lastname}"></span></h2>
+
 
     <div class="d-grid gap-3">
         <a th:href="@{/home/joingroup}" class="btn btn-outline-primary btn-custom">
@@ -79,10 +80,10 @@
         <a th:href="@{/evaluation-plans/my-plans}" class="btn btn-outline-dark btn-custom">
             <i class="bi bi-file-earmark-text"></i> Mis Planes
         </a>
-        <a th:href="@{/user/add-notes}" class="btn btn-outline-warning btn-custom text-dark">
+        <a th:href="@{/evaluation-plans/select-plan}" class="btn btn-outline-warning btn-custom text-dark">
             <i class="bi bi-pencil-square"></i> Añadir Notas
         </a>
-        <a th:href="@{/user/reports}" class="btn btn-outline-primary btn-custom">
+        <a th:href="@{/reports}" class="btn btn-outline-primary btn-custom">
             <i class="bi bi-bar-chart-line"></i> Ver Informes
         </a>
         <form th:action="@{/logout}" method="post">

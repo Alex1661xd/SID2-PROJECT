@@ -1,4 +1,4 @@
-package com.trackademic.controller;
+package com.trackademic.controller.postgres;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.trackademic.model.postgres.Student;
 import com.trackademic.service.postgres.GroupService;
+import com.trackademic.service.postgres.StudentService;
 
 @Controller
 @RequestMapping("/home")
@@ -17,12 +19,19 @@ public class HomeController {
 
     private final GroupService groupService;
 
-    public HomeController(GroupService groupService) {
+    private final StudentService studentService;
+
+    public HomeController(GroupService groupService, StudentService studentService) {
         this.groupService = groupService;
+        this.studentService=studentService;
     }
 
     @GetMapping
-    public String home() {
+    public String home(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        String studentEmail = userDetails.getUsername();
+        Student student=studentService.getStudentbyid(studentEmail);
+        model.addAttribute("name", student.getFirstName());
+        model.addAttribute("lastname", student.getLastName());
         return "StudentHome/home";
     }
 
