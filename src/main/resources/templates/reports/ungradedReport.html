@@ -2,86 +2,51 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Menú de Reportes</title>
+    <title>Actividades Sin Calificar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-4">
-    <h2>Menú de Reportes</h2>
+    <h2>Reporte de Actividades Sin Calificar</h2>
 
-    <!-- Mostrar mensaje de error si existe -->
     <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
         <span th:text="${errorMessage}"></span>
     </div>
 
-    <!-- Reportes Generales -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5>Reportes Generales</h5>
-        </div>
-        <div class="card-body">
-            <div class="list-group list-group-flush">
-                <a href="/reports/general" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Informe General de Notas</strong>
-                        <small class="text-muted d-block">Estadísticas generales de todas tus calificaciones</small>
-                    </div>
-                    <i class="fas fa-chart-bar"></i>
-                </a>
-                <a href="/reports/performance" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Rendimiento por Plan</strong>
-                        <small class="text-muted d-block">Análisis detallado del rendimiento de cada plan</small>
-                    </div>
-                    <i class="fas fa-trophy"></i>
-                </a>
-                <a href="/reports/ungraded" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Actividades Sin Calificar</strong>
-                        <small class="text-muted d-block">Lista de actividades pendientes por calificar</small>
-                    </div>
-                    <i class="fas fa-exclamation-triangle text-warning"></i>
-                </a>
-                <a href="/reports/grade-ranges" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Actividades por Rango de Notas</strong>
-                        <small class="text-muted d-block">Clasificación de actividades según su calificación</small>
-                    </div>
-                    <i class="fas fa-layer-group"></i>
-                </a>
-                <a href="/reports/comments-summary" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Resumen de Comentarios</strong>
-                        <small class="text-muted d-block">Estadísticas y resumen de comentarios por plan</small>
-                    </div>
-                    <i class="fas fa-comments"></i>
-                </a>
-            </div>
-        </div>
+    <div th:if="${totalUngradedActivities == 0}" class="alert alert-success" role="alert">
+        ¡Felicitaciones! Todas tus actividades están calificadas.
     </div>
 
-    <!-- Reportes por Plan -->
-    <div class="card" th:if="${!plans.isEmpty()}">
-        <div class="card-header">
-            <h5>Reportes Detallados por Plan</h5>
+    <div th:if="${totalUngradedActivities > 0}">
+        <div class="alert alert-info">
+            <strong>Total de actividades sin calificar: </strong>
+            <span th:text="${totalUngradedActivities}"></span>
         </div>
-        <div class="card-body">
-            <div class="list-group list-group-flush">
-                <a th:each="plan : ${plans}" 
-                   th:href="@{/reports/plan/{planId}(planId=${plan.id})}" 
-                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong th:text="${plan.title}"></strong>
-                        <small class="text-muted d-block">Grupo: <span th:text="${plan.groupId}"></span></small>
-                    </div>
-                    <i class="fas fa-file-alt"></i>
-                </a>
+
+        <div th:each="planData : ${ungradedActivitiesByPlan}" class="card mb-3">
+            <div class="card-header">
+                <h5>Plan: <span th:text="${planData.planTitle}"></span></h5>
+                <small class="text-muted">
+                    Actividades sin calificar: <span th:text="${planData.ungradedCount}"></span>
+                </small>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li th:each="activity : ${planData.ungradedActivities}" class="list-group-item d-flex justify-content-between">
+                        <div>
+                            <strong th:text="${activity.name}"></strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary" th:text="${activity.percentage} + '%'"></span>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 
     <div class="mt-3">
-        <a href="/evaluation-plans" class="btn btn-secondary">Volver a Planes de Evaluación</a>
+        <a href="/reports" class="btn btn-secondary">Volver al Menú de Reportes</a>
     </div>
 </div>
 </body>
