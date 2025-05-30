@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Actividades Sin Calificar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Reporte de Actividades Sin Calificar</h2>
+
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div th:if="${totalUngradedActivities == 0}" class="alert alert-success" role="alert">
+        ¡Felicitaciones! Todas tus actividades están calificadas.
+    </div>
+
+    <div th:if="${totalUngradedActivities > 0}">
+        <div class="alert alert-info">
+            <strong>Total de actividades sin calificar: </strong>
+            <span th:text="${totalUngradedActivities}"></span>
+        </div>
+
+        <div th:each="planData : ${ungradedActivitiesByPlan}" class="card mb-3">
+            <div class="card-header">
+                <h5>Plan: <span th:text="${planData.planTitle}"></span></h5>
+                <small class="text-muted">
+                    Actividades sin calificar: <span th:text="${planData.ungradedCount}"></span>
+                </small>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li th:each="activity : ${planData.ungradedActivities}" class="list-group-item d-flex justify-content-between">
+                        <div>
+                            <strong th:text="${activity.name}"></strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary" th:text="${activity.percentage} + '%'"></span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="/reports" class="btn btn-secondary">Volver al Menú de Reportes</a>
+    </div>
+</div>
+</body>
+</html>

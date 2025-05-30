@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Menú de Reportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient( #ddebfa);
+            padding: 40px 20px;
+        }
+        .main-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        h2 {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .card-header {
+            background-color: #5392f1;
+            color: white;
+            border-radius: 0.75rem 0.75rem 0 0;
+        }
+        .list-group-item {
+            transition: background-color 0.3s ease;
+            border: none;
+            border-bottom: 1px solid #eee;
+        }
+        .list-group-item:hover {
+            background-color: #f1f1f1;
+        }
+        .icon-wrapper {
+            font-size: 1.5rem;
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+<div class="main-card">
+    <h2 class="mb-4 text-primary">Menú de Reportes</h2>
+
+    <!-- Mostrar mensaje de error si existe -->
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Reportes Generales -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📘 Reportes Generales</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                <a href="/reports/general" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Informe General de Notas</strong>
+                        <small class="text-muted d-block">Estadísticas generales de todas tus calificaciones</small>
+                    </div>
+                    <i class="bi bi-bar-chart-line-fill icon-wrapper"></i>
+                </a>
+                <a href="/reports/performance" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Rendimiento por Plan</strong>
+                        <small class="text-muted d-block">Análisis detallado del rendimiento de cada plan</small>
+                    </div>
+                    <i class="bi bi-trophy-fill icon-wrapper"></i>
+                </a>
+                <a href="/reports/ungraded" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Actividades Sin Calificar</strong>
+                        <small class="text-muted d-block">Lista de actividades pendientes por calificar</small>
+                    </div>
+                    <i class="bi bi-list-ul icon-wrapper"></i>
+                </a>
+                <a href="/reports/grade-ranges" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Actividades por Rango de Notas</strong>
+                        <small class="text-muted d-block">Clasificación de actividades según su calificación</small>
+                    </div>
+                    <i class="bi bi-list-ul icon-wrapper"></i>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Reportes por Plan -->
+    <div class="card" th:if="${!plans.isEmpty()}">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">📄 Reportes Detallados por Plan</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush">
+                <a th:each="plan : ${plans}" 
+                   th:href="@{/reports/plan/{planId}(planId=${plan.id})}" 
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong th:text="${plan.title}"></strong>
+                        <small class="text-muted d-block">Grupo: <span th:text="${plan.groupId}"></span></small>
+                    </div>
+                    <i class="bi bi-file-earmark-text-fill icon-wrapper"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a th:href="@{/home}" class="btn btn-outline-primary back-to-home">
+            <i class="bi bi-arrow-left"></i> Volver al Inicio
+        </a>
+    </div>
+</div>
+</body>
+</html>
