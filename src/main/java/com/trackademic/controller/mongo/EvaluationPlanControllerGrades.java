@@ -128,23 +128,25 @@ public class EvaluationPlanControllerGrades {
                         // Extraer el índice
                         String indexStr = key.substring(7, key.length() - 1); // grades[0] -> 0
                         int index = Integer.parseInt(indexStr);
-                        grades.put(index, value);
+                        
+                        // Solo añadir si el valor no está vacío
+                        if (value != null && !value.trim().isEmpty()) {
+                            grades.put(index, value.trim());
+                        }
                     } catch (NumberFormatException e) {
-                
+                        // Ignorar índices inválidos
                     }
                 }
             }
             
-            // Verificar que tenemos el número correcto de calificaciones
-            if (grades.size() != plan.getActivities().size()) {
-                throw new IllegalArgumentException("Número de calificaciones no coincide con número de actividades");
-            }
-            
             // Asignar calificaciones a las actividades por índice
             List<Activities> activities = plan.getActivities();
-            for (int i = 0; i < activities.size(); i++) {
-                if (grades.containsKey(i)) {
-                    String gradeStr = grades.get(i);
+            for (Map.Entry<Integer, String> entry : grades.entrySet()) {
+                int index = entry.getKey();
+                String gradeStr = entry.getValue();
+                
+                // Verificar que el índice sea válido
+                if (index >= 0 && index < activities.size()) {
                     
                     if (!gradeStr.matches("\\d+(\\.\\d+)?")) {
                         throw new IllegalArgumentException("Valor de calificación inválido: " + gradeStr);
@@ -157,15 +159,16 @@ public class EvaluationPlanControllerGrades {
                         throw new IllegalArgumentException("Las notas deben estar entre 0 y 5.0");
                     }
                     
-                    activities.get(i).setGrade(grade);
+                    activities.get(index).setGrade(grade);
                 }
             }
 
             // Guardar el plan actualizado con las notas
             planService.savePlan(plan);
 
-            model.addAttribute("successMessage", "Notas añadidas exitosamente.");
-            return "redirect:/evaluation-plans/my-plans";
+            model.addAttribute("successMessage", "Notas guardadas exitosamente.");
+            model.addAttribute("plan", plan); // Recargar el plan actualizado
+            return "StudentHome/addNotesToPlans";
 
         } catch (Exception e) {
             System.out.println("ERROR en addNotesToPlan: " + e.getMessage());
@@ -176,4 +179,95 @@ public class EvaluationPlanControllerGrades {
         }
     }
 
+    // Nueva funcionalidad: Eliminar nota de una actividad específica
+    @PostMapping("/remove-grade/{planId}/{activityIndex}")
+    public String removeGradeFromActivity(@PathVariable String planId, 
+                                        @PathVariable int activityIndex,
+                                        Model model) {
+        try {
+            // Obtener el plan
+            EvaluationPlan plan = planService.getPlanById(planId)
+                    .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
+            
+            // Verificar que el estudiante sea el creador del plan
+            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            if (!currentUser.equals(plan.getCreatedByStudentId())) {
+                throw new IllegalArgumentException("No tienes permisos para modificar este plan");
+            }
+
+            // Verificar que el índice sea válido
+            if (activityIndex < 0 || activityIndex >= plan.getActivities().size()) {
+                throw new IllegalArgumentException("Índice de actividad inválido");
+            }
+
+            // Eliminar la calificación (establecer como null)
+            plan.getActivities().get(activityIndex).setGrade(null);
+
+            // Guardar el plan actualizado
+            planService.savePlan(plan);
+
+            model.addAttribute("successMessage", "Nota eliminada exitosamente.");
+            model.addAttribute("plan", plan);
+            return "StudentHome/addNotesToPlans";
+
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Error al eliminar la nota: " + e.getMessage());
+            model.addAttribute("plan", planService.getPlanById(planId).orElse(null));
+            return "StudentHome/addNotesToPlans";
+        }
+    }
+
+    // Nueva funcionalidad: Actualizar nota de una actividad específica
+    @PostMapping("/update-grade/{planId}/{activityIndex}")
+    public String updateSingleGrade(@PathVariable String planId, 
+                                  @PathVariable int activityIndex,
+                                  @RequestParam String grade,
+                                  Model model) {
+        try {
+            // Obtener el plan
+            EvaluationPlan plan = planService.getPlanById(planId)
+                    .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
+            
+            // Verificar que el estudiante sea el creador del plan
+            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            if (!currentUser.equals(plan.getCreatedByStudentId())) {
+                throw new IllegalArgumentException("No tienes permisos para modificar este plan");
+            }
+
+            // Verificar que el índice sea válido
+            if (activityIndex < 0 || activityIndex >= plan.getActivities().size()) {
+                throw new IllegalArgumentException("Índice de actividad inválido");
+            }
+
+            // Validar y asignar la calificación si no está vacía
+            if (grade != null && !grade.trim().isEmpty()) {
+                if (!grade.matches("\\d+(\\.\\d+)?")) {
+                    throw new IllegalArgumentException("Valor de calificación inválido: " + grade);
+                }
+                
+                Double gradeValue = Double.parseDouble(grade);
+                
+                if (gradeValue < 0 || gradeValue > 5.0) {
+                    throw new IllegalArgumentException("Las notas deben estar entre 0 y 5.0");
+                }
+                
+                plan.getActivities().get(activityIndex).setGrade(gradeValue);
+            } else {
+                // Si está vacío, eliminar la calificación
+                plan.getActivities().get(activityIndex).setGrade(null);
+            }
+
+            // Guardar el plan actualizado
+            planService.savePlan(plan);
+
+            model.addAttribute("successMessage", "Nota actualizada exitosamente.");
+            model.addAttribute("plan", plan);
+            return "StudentHome/addNotesToPlans";
+
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Error al actualizar la nota: " + e.getMessage());
+            model.addAttribute("plan", planService.getPlanById(planId).orElse(null));
+            return "StudentHome/addNotesToPlans";
+        }
+    }
 }

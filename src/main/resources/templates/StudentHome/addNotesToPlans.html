@@ -4,48 +4,209 @@
     <meta charset="UTF-8">
     <title>Añadir Notas a las Actividades</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .activity-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        .grade-display {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .grade-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .graded {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .not-graded {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .btn-action {
+            margin: 5px;
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
-    <h2>Añadir Notas a las Actividades de: <span th:text="${plan.title}"></span></h2>
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-clipboard-list"></i>
+                Gestionar Notas de: <span th:text="${plan.title}" class="text-primary"></span>
+            </h2>
 
-    <!-- Mostrar mensaje de error si existe -->
-    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-        <span th:text="${errorMessage}"></span>
-    </div>
+            <!-- Mostrar mensaje de éxito si existe -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
 
-    <form th:action="@{/evaluation-plans/add-notes/{planId}(planId=${plan.id})}" method="post">
-        <div th:each="activity, iterStat : ${plan.activities}">
-            <div class="form-group mb-3">
-                <label th:for="'grade_' + ${iterStat.index}">
-                    <strong th:text="${activity.name}"></strong> 
-                    (Porcentaje: <span th:text="${activity.percentage}">0</span>%)
-                </label>
-                
-                <input type="number" 
-                       th:id="'grade_' + ${iterStat.index}"
-                       th:name="'grades[' + ${iterStat.index} + ']'"
-                       class="form-control" 
-                       min="0" 
-                       max="5" 
-                       step="0.1" 
-                       placeholder="Ingresa la calificación (0-5)"
-                       th:value="${activity.grade != null && activity.grade > 0 ? activity.grade : ''}"
-                       required />
-                       
-                <small class="form-text text-muted">
-                    Calificación actual: <span th:text="${activity.grade != null ? activity.grade : 'Sin calificar'}"></span>
-                </small>
+            <!-- Mostrar mensaje de error si existe -->
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Información del plan -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Información del Plan</h5>
+                    <p class="card-text">
+                        <strong>Total de actividades:</strong> <span th:text="${#lists.size(plan.activities)}"></span><br>
+                        <strong>Actividades calificadas:</strong> 
+                        <span th:text="${#lists.size(#lists.toList(plan.activities.?[grade != null]))}"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lista de actividades -->
+            <div th:each="activity, iterStat : ${plan.activities}" class="activity-card">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-2">
+                            <i class="fas fa-tasks"></i>
+                            <span th:text="${activity.name}"></span>
+                        </h5>
+                        <p class="mb-1">
+                            <strong>Porcentaje:</strong> 
+                            <span th:text="${activity.percentage}" class="badge bg-info"></span>%
+                        </p>
+                        <div class="grade-status" 
+                             th:classappend="${activity.grade != null ? 'graded' : 'not-graded'}">
+                            <span th:if="${activity.grade != null}">
+                                <i class="fas fa-check"></i> Calificada
+                            </span>
+                            <span th:unless="${activity.grade != null}">
+                                <i class="fas fa-times"></i> Sin calificar
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column align-items-end">
+                            <!-- Mostrar calificación actual -->
+                            <div class="grade-display mb-2" th:if="${activity.grade != null}">
+                                Nota actual: <span class="text-success" th:text="${activity.grade}"></span> / 5.0
+                            </div>
+                            <div class="grade-display mb-2 text-muted" th:unless="${activity.grade != null}">
+                                Sin calificación
+                            </div>
+                            
+                            <!-- Formulario para actualizar una sola actividad -->
+                            <form th:action="@{/evaluation-plans/update-grade/{planId}/{activityIndex}(planId=${plan.id}, activityIndex=${iterStat.index})}" 
+                                  method="post" class="d-flex align-items-center gap-2">
+                                <div class="input-group" style="max-width: 200px;">
+                                    <input type="number" 
+                                           th:name="grade"
+                                           class="form-control" 
+                                           min="0" 
+                                           max="5" 
+                                           step="0.1" 
+                                           placeholder="0-5"
+                                           th:value="${activity.grade != null ? activity.grade : ''}" />
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-save"></i>
+                                        <span th:if="${activity.grade != null}">Actualizar</span>
+                                        <span th:unless="${activity.grade != null}">Guardar</span>
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Botón para eliminar calificación -->
+                            <form th:if="${activity.grade != null}" 
+                                  th:action="@{/evaluation-plans/remove-grade/{planId}/{activityIndex}(planId=${plan.id}, activityIndex=${iterStat.index})}" 
+                                  method="post" 
+                                  class="mt-2"
+                                  onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta nota?');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Eliminar Nota
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección para añadir múltiples notas a la vez (opcional) -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit"></i>
+                        Añadir/Actualizar Múltiples Notas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">También puedes actualizar múltiples actividades a la vez:</p>
+                    
+                    <form th:action="@{/evaluation-plans/add-notes/{planId}(planId=${plan.id})}" method="post">
+                        <div class="row">
+                            <div th:each="activity, iterStat : ${plan.activities}" class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label th:for="'grade_' + ${iterStat.index}" class="form-label">
+                                        <strong th:text="${activity.name}"></strong> 
+                                        (<span th:text="${activity.percentage}">0</span>%)
+                                    </label>
+                                    
+                                    <input type="number" 
+                                           th:id="'grade_' + ${iterStat.index}"
+                                           th:name="'grades[' + ${iterStat.index} + ']'"
+                                           class="form-control" 
+                                           min="0" 
+                                           max="5" 
+                                           step="0.1" 
+                                           placeholder="Opcional (0-5)"
+                                           th:value="${activity.grade != null ? activity.grade : ''}" />
+                                           
+                                    <small class="form-text text-muted">
+                                        Estado: <span th:text="${activity.grade != null ? activity.grade + '/5.0' : 'Sin calificar'}"></span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Guardar Todas las Notas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Botones de navegación -->
+            <div class="d-flex gap-2 mt-4 mb-4">
+                <a href="/evaluation-plans/my-plans" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Mis Planes
+                </a>
+                <a href="/evaluation-plans/select-plan" class="btn btn-outline-primary">
+                    <i class="fas fa-list"></i> Seleccionar Otro Plan
+                </a>
             </div>
         </div>
-        
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-success">Guardar Notas</button>
-            <a href="/evaluation-plans/my-plans" class="btn btn-secondary">Cancelar</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(function(alert) {
+            var bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
 </body>
 </html>

@@ -14,6 +14,5 @@ public class Activities {
     private String name;
     private Double percentage;
 
-    @Builder.Default
-    private Double grade = 0.0;
+    private Double grade;
 }
