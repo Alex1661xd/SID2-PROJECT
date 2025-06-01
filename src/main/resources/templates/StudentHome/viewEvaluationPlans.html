@@ -199,6 +199,7 @@
             success: function(data) {
                 const comments = data.comments;
                 const currentStudentId = data.currentStudentId;
+                const currentStudentName = data.currentStudentName;
 
                 content += `
                         <div class="mb-3">
@@ -210,6 +211,7 @@
                 comments.forEach(comment => {
                     content += `
                             <div class="comment mb-2">
+                                <p><strong>Estudiante:</strong> ${comment.nameStudent}</p>
                                 <p><strong>Estudiante ID:</strong> ${comment.studentId}</p>
                                 <p>${comment.content}</p>
                                 <p><em>${new Date(comment.timestamp).toLocaleString()}</em></p>
@@ -230,17 +232,18 @@
                         `;
                 });
                 content += `
-                            </div>
-                            <div sec:authorize="isAuthenticated()">
-                                <h6>Agregar Comentario</h6>
-                                <form class="add-comment-form" action="/evaluation-plans/${planId}/comments" method="post">
-                                    <input type="hidden" name="_csrf" value="${csrfToken}">
-                                    <textarea name="content" rows="4" class="form-control mb-1" required maxlength="1000"></textarea>
-                                    <button type="submit" class="btn btn-primary">Enviar Comentario</button>
-                                </form>
-                            </div>
                         </div>
-                    `;
+                        <div sec:authorize="isAuthenticated()">
+                            <h6>Agregar Comentario</h6>
+                            <form class="add-comment-form" action="/evaluation-plans/${planId}/comments" method="post">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
+                                <textarea name="content" rows="4" class="form-control mb-1" required maxlength="1000"></textarea>
+                                <button type="submit" class="btn btn-primary">Enviar Comentario</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
 
                 document.getElementById("planModalLabel").textContent = planTitle;
                 document.getElementById("modalBody").innerHTML = content;
