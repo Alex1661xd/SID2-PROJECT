@@ -32,18 +32,22 @@ public class SimpleReportsController {
             if (userPlans.isEmpty()) {
                 
                 model.addAttribute("errorMessage", "No tienes planes disponibles.");
-                return "reports/reportsMenu";  // Redirige a una vista donde el mensaje de error se muestre
+
+                return "reports/reportsMenu"; 
             }
 
-            model.addAttribute("plans", userPlans); // Asegúrate de pasar la lista de planes al modelo
+            model.addAttribute("plans", userPlans); 
             System.out.println("hola 3");
-            return "reports/reportsMenu";  // Vista de menú de reportes
+            return "reports/reportsMenu";  
+
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Error al cargar el menú de informes: " + e.getMessage());
             return "reports/reportsMenu";  // Redirige a la misma vista si hay un error
         }
     }
-    // Informe de notas por plan
+
+    
+
     @GetMapping("/plan/{planId}")
     public String planReport(@PathVariable String planId, Model model) {
         try {
@@ -110,185 +114,182 @@ public class SimpleReportsController {
         }
     }
 
-    
 
-    // Agregar estos 4 métodos al SimpleReportsController existente
-
-// 1. Reporte de Actividades Sin Calificar
-@GetMapping("/ungraded")
-public String ungradedActivitiesReport(Model model) {
+    // 1. Reporte de Actividades Sin Calificar
+    @GetMapping("/ungraded")
+    public String ungradedActivitiesReport(Model model) {
     try {
-        String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
+    String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+    List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
+
+    List<Map<String, Object>> ungradedActivitiesByPlan = new ArrayList<>();
+
+    for (EvaluationPlan plan : userPlans) {
+        List<Activities> ungradedActivities = plan.getActivities().stream()
+            .filter(activity -> activity.getGrade() == null || activity.getGrade() == 0)
+            .collect(Collectors.toList());
         
-        List<Map<String, Object>> ungradedActivitiesByPlan = new ArrayList<>();
-        
-        for (EvaluationPlan plan : userPlans) {
-            List<Activities> ungradedActivities = plan.getActivities().stream()
-                .filter(activity -> activity.getGrade() == null || activity.getGrade() == 0)
+        if (!ungradedActivities.isEmpty()) {
+            Map<String, Object> planData = new HashMap<>();
+            planData.put("planTitle", plan.getTitle());
+            planData.put("planId", plan.getId());
+            planData.put("ungradedActivities", ungradedActivities);
+            planData.put("ungradedCount", ungradedActivities.size());
+            ungradedActivitiesByPlan.add(planData);
+        }
+    }
+
+    int totalUngradedActivities = ungradedActivitiesByPlan.stream()
+        .mapToInt(plan -> (Integer) plan.get("ungradedCount"))
+        .sum();
+
+    model.addAttribute("ungradedActivitiesByPlan", ungradedActivitiesByPlan);
+    model.addAttribute("totalUngradedActivities", totalUngradedActivities);
+
+    return "reports/ungradedReport";
+    } catch (Exception e) {
+    model.addAttribute("errorMessage", "Error al generar el informe de actividades sin calificar: " + e.getMessage());
+    return "redirect:/reports";
+    }
+    }
+
+    // 2. Reporte de Rendimiento por Plan
+    @GetMapping("/performance")
+    public String performanceReport(Model model) {
+    try {
+    String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+    List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
+
+    List<Map<String, Object>> planPerformances = userPlans.stream()
+        .map(plan -> {
+            Map<String, Object> performance = new HashMap<>();
+            performance.put("planTitle", plan.getTitle());
+            performance.put("planId", plan.getId());
+            performance.put("groupId", plan.getGroupId());
+            
+            List<Activities> gradedActivities = plan.getActivities().stream()
+                .filter(activity -> activity.getGrade() != null && activity.getGrade() > 0)
                 .collect(Collectors.toList());
             
-            if (!ungradedActivities.isEmpty()) {
-                Map<String, Object> planData = new HashMap<>();
-                planData.put("planTitle", plan.getTitle());
-                planData.put("planId", plan.getId());
-                planData.put("ungradedActivities", ungradedActivities);
-                planData.put("ungradedCount", ungradedActivities.size());
-                ungradedActivitiesByPlan.add(planData);
+            double totalActivities = plan.getActivities().size();
+            double gradedCount = gradedActivities.size();
+            double completionPercentage = totalActivities > 0 ? (gradedCount / totalActivities) * 100 : 0;
+            
+            double weightedAverage = 0.0;
+            if (!gradedActivities.isEmpty()) {
+                weightedAverage = gradedActivities.stream()
+                    .mapToDouble(activity -> activity.getGrade() * (activity.getPercentage() / 100.0))
+                    .sum();
+            }
+            
+            performance.put("completionPercentage", Math.round(completionPercentage * 100.0) / 100.0);
+            performance.put("weightedAverage", Math.round(weightedAverage * 100.0) / 100.0);
+            performance.put("totalActivities", (int) totalActivities);
+            performance.put("gradedActivities", (int) gradedCount);
+            
+            return performance;
+        })
+        .sorted((p1, p2) -> Double.compare((Double) p2.get("weightedAverage"), (Double) p1.get("weightedAverage")))
+        .collect(Collectors.toList());
+
+    model.addAttribute("planPerformances", planPerformances);
+
+    return "reports/performanceReport";
+    } catch (Exception e) {
+    model.addAttribute("errorMessage", "Error al generar el informe de rendimiento: " + e.getMessage());
+    return "redirect:/reports";
+    }
+    }
+
+    // 3. Reporte de Actividades por Rango de Notas
+    @GetMapping("/grade-ranges")
+    public String gradeRangesReport(Model model) {
+    try {
+    String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+    List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
+
+    // Definir rangos de notas
+    Map<String, List<Map<String, Object>>> gradeRanges = new HashMap<>();
+    gradeRanges.put("Excelente (4.5 - 5.0)", new ArrayList<>());
+    gradeRanges.put("Bueno (4.0 - 4.4)", new ArrayList<>());
+    gradeRanges.put("Aceptable (3.0 - 3.9)", new ArrayList<>());
+    gradeRanges.put("Deficiente (0.0 - 2.9)", new ArrayList<>());
+
+    for (EvaluationPlan plan : userPlans) {
+        for (Activities activity : plan.getActivities()) {
+            if (activity.getGrade() != null && activity.getGrade() > 0) {
+                Map<String, Object> activityInfo = new HashMap<>();
+                activityInfo.put("activityName", activity.getName());
+                activityInfo.put("planTitle", plan.getTitle());
+                activityInfo.put("grade", activity.getGrade());
+                activityInfo.put("percentage", activity.getPercentage());
+                
+                double grade = activity.getGrade();
+                if (grade >= 4.5) {
+                    gradeRanges.get("Excelente (4.5 - 5.0)").add(activityInfo);
+                } else if (grade >= 4.0) {
+                    gradeRanges.get("Bueno (4.0 - 4.4)").add(activityInfo);
+                } else if (grade >= 3.0) {
+                    gradeRanges.get("Aceptable (3.0 - 3.9)").add(activityInfo);
+                } else {
+                    gradeRanges.get("Deficiente (0.0 - 2.9)").add(activityInfo);
+                }
             }
         }
-        
-        int totalUngradedActivities = ungradedActivitiesByPlan.stream()
-            .mapToInt(plan -> (Integer) plan.get("ungradedCount"))
-            .sum();
-        
-        model.addAttribute("ungradedActivitiesByPlan", ungradedActivitiesByPlan);
-        model.addAttribute("totalUngradedActivities", totalUngradedActivities);
-        
-        return "reports/ungradedReport";
-    } catch (Exception e) {
-        model.addAttribute("errorMessage", "Error al generar el informe de actividades sin calificar: " + e.getMessage());
-        return "redirect:/reports";
     }
-}
 
-// 2. Reporte de Rendimiento por Plan
-@GetMapping("/performance")
-public String performanceReport(Model model) {
+    model.addAttribute("gradeRanges", gradeRanges);
+
+    return "reports/gradeRangesReport";
+    } catch (Exception e) {
+    model.addAttribute("errorMessage", "Error al generar el informe por rangos de notas: " + e.getMessage());
+    return "redirect:/reports";
+    }
+    }
+
+    // 4. Reporte de Comentarios por Plan
+    @GetMapping("/comments-summary")
+    public String commentsSummaryReport(Model model) {
     try {
-        String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
-        
-        List<Map<String, Object>> planPerformances = userPlans.stream()
-            .map(plan -> {
-                Map<String, Object> performance = new HashMap<>();
-                performance.put("planTitle", plan.getTitle());
-                performance.put("planId", plan.getId());
-                performance.put("groupId", plan.getGroupId());
-                
-                List<Activities> gradedActivities = plan.getActivities().stream()
-                    .filter(activity -> activity.getGrade() != null && activity.getGrade() > 0)
+    String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+    List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
+
+    List<Map<String, Object>> planCommentsSummary = userPlans.stream()
+        .map(plan -> {
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("planTitle", plan.getTitle());
+            summary.put("planId", plan.getId());
+            summary.put("groupId", plan.getGroupId());
+            
+            int commentCount = plan.getComments() != null ? plan.getComments().size() : 0;
+            summary.put("commentCount", commentCount);
+            
+            // Obtener los comentarios más recientes 
+            List<Comment> recentComments = new ArrayList<>();
+            if (plan.getComments() != null && !plan.getComments().isEmpty()) {
+                recentComments = plan.getComments().stream()
+                    .sorted((c1, c2) -> c2.getTimestamp().compareTo(c1.getTimestamp()))
+                    .limit(3)
                     .collect(Collectors.toList());
-                
-                double totalActivities = plan.getActivities().size();
-                double gradedCount = gradedActivities.size();
-                double completionPercentage = totalActivities > 0 ? (gradedCount / totalActivities) * 100 : 0;
-                
-                double weightedAverage = 0.0;
-                if (!gradedActivities.isEmpty()) {
-                    weightedAverage = gradedActivities.stream()
-                        .mapToDouble(activity -> activity.getGrade() * (activity.getPercentage() / 100.0))
-                        .sum();
-                }
-                
-                performance.put("completionPercentage", Math.round(completionPercentage * 100.0) / 100.0);
-                performance.put("weightedAverage", Math.round(weightedAverage * 100.0) / 100.0);
-                performance.put("totalActivities", (int) totalActivities);
-                performance.put("gradedActivities", (int) gradedCount);
-                
-                return performance;
-            })
-            .sorted((p1, p2) -> Double.compare((Double) p2.get("weightedAverage"), (Double) p1.get("weightedAverage")))
-            .collect(Collectors.toList());
-        
-        model.addAttribute("planPerformances", planPerformances);
-        
-        return "reports/performanceReport";
-    } catch (Exception e) {
-        model.addAttribute("errorMessage", "Error al generar el informe de rendimiento: " + e.getMessage());
-        return "redirect:/reports";
-    }
-}
-
-// 3. Reporte de Actividades por Rango de Notas
-@GetMapping("/grade-ranges")
-public String gradeRangesReport(Model model) {
-    try {
-        String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
-        
-        // Definir rangos de notas
-        Map<String, List<Map<String, Object>>> gradeRanges = new HashMap<>();
-        gradeRanges.put("Excelente (4.5 - 5.0)", new ArrayList<>());
-        gradeRanges.put("Bueno (4.0 - 4.4)", new ArrayList<>());
-        gradeRanges.put("Aceptable (3.0 - 3.9)", new ArrayList<>());
-        gradeRanges.put("Deficiente (0.0 - 2.9)", new ArrayList<>());
-        
-        for (EvaluationPlan plan : userPlans) {
-            for (Activities activity : plan.getActivities()) {
-                if (activity.getGrade() != null && activity.getGrade() > 0) {
-                    Map<String, Object> activityInfo = new HashMap<>();
-                    activityInfo.put("activityName", activity.getName());
-                    activityInfo.put("planTitle", plan.getTitle());
-                    activityInfo.put("grade", activity.getGrade());
-                    activityInfo.put("percentage", activity.getPercentage());
-                    
-                    double grade = activity.getGrade();
-                    if (grade >= 4.5) {
-                        gradeRanges.get("Excelente (4.5 - 5.0)").add(activityInfo);
-                    } else if (grade >= 4.0) {
-                        gradeRanges.get("Bueno (4.0 - 4.4)").add(activityInfo);
-                    } else if (grade >= 3.0) {
-                        gradeRanges.get("Aceptable (3.0 - 3.9)").add(activityInfo);
-                    } else {
-                        gradeRanges.get("Deficiente (0.0 - 2.9)").add(activityInfo);
-                    }
-                }
             }
-        }
-        
-        model.addAttribute("gradeRanges", gradeRanges);
-        
-        return "reports/gradeRangesReport";
-    } catch (Exception e) {
-        model.addAttribute("errorMessage", "Error al generar el informe por rangos de notas: " + e.getMessage());
-        return "redirect:/reports";
-    }
-}
+            summary.put("recentComments", recentComments);
+            
+            return summary;
+        })
+        .sorted((p1, p2) -> Integer.compare((Integer) p2.get("commentCount"), (Integer) p1.get("commentCount")))
+        .collect(Collectors.toList());
 
-// 4. Reporte de Comentarios por Plan
-@GetMapping("/comments-summary")
-public String commentsSummaryReport(Model model) {
-    try {
-        String studentEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<EvaluationPlan> userPlans = planService.getPlansByStudentId(studentEmail);
-        
-        List<Map<String, Object>> planCommentsSummary = userPlans.stream()
-            .map(plan -> {
-                Map<String, Object> summary = new HashMap<>();
-                summary.put("planTitle", plan.getTitle());
-                summary.put("planId", plan.getId());
-                summary.put("groupId", plan.getGroupId());
-                
-                int commentCount = plan.getComments() != null ? plan.getComments().size() : 0;
-                summary.put("commentCount", commentCount);
-                
-                // Obtener los comentarios más recientes (máximo 3)
-                List<Comment> recentComments = new ArrayList<>();
-                if (plan.getComments() != null && !plan.getComments().isEmpty()) {
-                    recentComments = plan.getComments().stream()
-                        .sorted((c1, c2) -> c2.getTimestamp().compareTo(c1.getTimestamp()))
-                        .limit(3)
-                        .collect(Collectors.toList());
-                }
-                summary.put("recentComments", recentComments);
-                
-                return summary;
-            })
-            .sorted((p1, p2) -> Integer.compare((Integer) p2.get("commentCount"), (Integer) p1.get("commentCount")))
-            .collect(Collectors.toList());
-        
-        int totalComments = planCommentsSummary.stream()
-            .mapToInt(plan -> (Integer) plan.get("commentCount"))
-            .sum();
-        
-        model.addAttribute("planCommentsSummary", planCommentsSummary);
-        model.addAttribute("totalComments", totalComments);
-        
-        return "reports/commentsSummaryReport";
+    int totalComments = planCommentsSummary.stream()
+        .mapToInt(plan -> (Integer) plan.get("commentCount"))
+        .sum();
+
+    model.addAttribute("planCommentsSummary", planCommentsSummary);
+    model.addAttribute("totalComments", totalComments);
+
+    return "reports/commentsSummaryReport";
     } catch (Exception e) {
-        model.addAttribute("errorMessage", "Error al generar el informe de comentarios: " + e.getMessage());
-        return "redirect:/reports";
+    model.addAttribute("errorMessage", "Error al generar el informe de comentarios: " + e.getMessage());
+    return "redirect:/reports";
     }
-}
-}
+    }
+    }
