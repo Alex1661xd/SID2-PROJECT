@@ -32,18 +32,22 @@ public class SimpleReportsController {
             if (userPlans.isEmpty()) {
                 
                 model.addAttribute("errorMessage", "No tienes planes disponibles.");
+
                 return "reports/reportsMenu"; 
             }
 
             model.addAttribute("plans", userPlans); 
             System.out.println("hola 3");
             return "reports/reportsMenu";  
+
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Error al cargar el menú de informes: " + e.getMessage());
             return "reports/reportsMenu";  // Redirige a la misma vista si hay un error
         }
     }
+
     
+
     @GetMapping("/plan/{planId}")
     public String planReport(@PathVariable String planId, Model model) {
         try {
@@ -109,6 +113,7 @@ public class SimpleReportsController {
             return "redirect:/reports";
         }
     }
+
 
     // 1. Reporte de Actividades Sin Calificar
     @GetMapping("/ungraded")
