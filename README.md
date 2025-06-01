@@ -1,4 +1,4 @@
-# SID2-PROJECT
+# **SID2-PROJECT - TRACKADEMIC**
 
 Este proyecto de **Sistemas de Datos Intensivos II** tiene como objetivo desarrollar una aplicación web que permita a los estudiantes gestionar sus notas y planes de evaluación de manera flexible y colaborativa.
 
@@ -13,7 +13,7 @@ El sistema está construido con una arquitectura que integra dos tipos de bases 
 El uso combinado de estas tecnologías permite optimizar tanto la integridad de los datos académicos como la flexibilidad requerida en escenarios colaborativos.
 
 
-## Integrantes del equipo
+## **Integrantes del equipo**
 
 | Nombre                    | Código      |
 |---------------------------|-------------|
@@ -21,11 +21,25 @@ El uso combinado de estas tecnologías permite optimizar tanto la integridad de 
 | Alexis Delgado            |  A00399176  |
 | Mariana De La Cruz        |  A00399618  |
 | Juan Camilo Corrales      |  A00366910  |
-| Corina Klinge             |             |
+| Corina Klinge             |  A00411745  |
 
 
-## Herramientas principales
+## **Herramientas principales**
 
-- Spring Boot 
-- PostgreSQL
-- MongoDB 
+* **Spring Boot** – Framework principal para el backend
+* **PostgreSQL** – Base de datos relacional para la información estructurada
+* **MongoDB** – Base de datos NoSQL para los datos colaborativos y flexibles
+
+
+## **Comando para Ejecutar el Proyecto**
+
+```bash
+./mvnw spring-boot:run
+```
+
+> Requisitos previos:
+>
+> * Tener **Maven** instalado (o usar el wrapper incluido `mvnw`)
+> * Tener **Java 17 o superior**
+
+
