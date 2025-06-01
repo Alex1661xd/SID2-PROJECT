@@ -239,6 +239,7 @@ public class EvaluationPlanController {
         Map<String, Object> response = new HashMap<>();
         response.put("comments", comments);
         response.put("currentStudentId", student.getId());
+        response.put("name", student.getFirstName());
 
         return ResponseEntity.ok(response);
     }

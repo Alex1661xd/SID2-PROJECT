@@ -210,6 +210,7 @@
                 comments.forEach(comment => {
                     content += `
                             <div class="comment mb-2">
+                                <p><strong>Estudiante:</strong> ${comment.name}</p>
                                 <p><strong>Estudiante ID:</strong> ${comment.studentId}</p>
                                 <p>${comment.content}</p>
                                 <p><em>${new Date(comment.timestamp).toLocaleString()}</em></p>
