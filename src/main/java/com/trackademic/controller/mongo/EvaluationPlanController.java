@@ -227,23 +227,44 @@ public class EvaluationPlanController {
         return "StudentHome/viewPlanDetail";
     }
 
-    // NEW COMMENT ENDPOINTS
     @GetMapping("/{id}/data")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getPlanComments(@PathVariable String id) {
         List<Comment> comments = commentService.getCommentsByPlanId(id);
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Student student = studentRepository.findByEmail(email)
+        Student currentStudent = studentRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found"));
 
+        // Enriquecer comentarios con nombres de estudiantes
+        List<Map<String, Object>> enrichedComments = comments.stream().map(comment -> {
+            Map<String, Object> commentData = new HashMap<>();
+            commentData.put("id", comment.getId());
+            commentData.put("content", comment.getContent());
+            commentData.put("timestamp", comment.getTimestamp());
+            commentData.put("studentId", comment.getStudentId());
+            
+            // Buscar nombre del estudiante que hizo el comentario
+            try {
+                Student commentStudent = studentRepository.findById(comment.getStudentId())
+                        .orElse(null);
+                String studentName = (commentStudent != null) ? 
+                        commentStudent.getFirstName() + " " + commentStudent.getLastName() : 
+                        "Usuario Desconocido";
+                commentData.put("nameStudent", studentName);
+            } catch (Exception e) {
+                commentData.put("nameStudent", "Usuario Desconocido");
+            }
+            
+            return commentData;
+        }).toList();
+
         Map<String, Object> response = new HashMap<>();
-        response.put("comments", comments);
-        response.put("currentStudentId", student.getId());
-        response.put("name", student.getFirstName());
+        response.put("comments", enrichedComments);
+        response.put("currentStudentId", currentStudent.getId());
+        response.put("currentStudentName", currentStudent.getFirstName());
 
         return ResponseEntity.ok(response);
     }
-
     @PostMapping("/{id}/comments")
     @ResponseBody
     public ResponseEntity<Map<String, String>> addComment(@PathVariable String id, @RequestParam String content) {
