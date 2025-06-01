@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumen de Comentarios por Plan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .comment-preview {
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Resumen de Comentarios por Plan</h2>
+
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div th:if="${totalComments == 0}" class="alert alert-info" role="alert">
+        No hay comentarios en ninguno de tus planes de evaluación.
+    </div>
+
+    <div th:if="${totalComments > 0}">
+        <div class="alert alert-primary">
+            <strong>Total de comentarios en todos los planes: </strong>
+            <span th:text="${totalComments}"></span>
+        </div>
+
+        <div th:each="planSummary : ${planCommentsSummary}" class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0" th:text="${planSummary.planTitle}"></h5>
+                    <small class="text-muted">Grupo: <span th:text="${planSummary.groupId}"></span></small>
+                </div>
+                <span class="badge bg-info" th:text="${planSummary.commentCount} + ' comentarios'"></span>
+            </div>
+            
+            <div th:if="${planSummary.commentCount == 0}" class="card-body">
+                <p class="text-muted mb-0">Este plan no tiene comentarios.</p>
+            </div>
+            
+            <div th:if="${planSummary.commentCount > 0}" class="card-body">
+                <h6>Comentarios más recientes:</h6>
+                <div th:each="comment : ${planSummary.recentComments}" class="border-start border-primary ps-3 mb-2">
+                    <div class="comment-preview">
+                        <p class="mb-1" th:text="${comment.content}"></p>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i>
+                        <span th:text="${#temporals.format(comment.timestamp, 'dd/MM/yyyy HH:mm')}"></span>
+                    </small>
+                </div>
+                
+                <div th:if="${planSummary.commentCount > 3}" class="mt-2">
+                    <small class="text-muted">
+                        Y <span th:text="${planSummary.commentCount - 3}"></span> comentarios más...
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="/reports" class="btn btn-secondary">Volver al Menú de Reportes</a>
+    </div>
+</div>
+</body>
+</html>
