@@ -126,11 +126,14 @@
                     <button type="submit" class="btn btn-sm btn-danger"
                             onclick="return confirm('¿Estás seguro de eliminar este plan?')">Eliminar</button>
                 </form>
-                <form th:action="@{/evaluation-plans/clone/{id}(id=${plan.id})}" method="post" style="display:inline">
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
-                        Usar este plan
-                    </button>
-                </form>
+                <th:block th:if="${plan.createdByStudentId != currentUser}">
+                    <form th:action="@{/evaluation-plans/clone/{id}(id=${plan.id})}" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                             Usar este plan
+                        </button>
+                    </form>
+                </th:block>
+
 
                 <span th:if="${plan.createdByStudentId != currentUser}"
                     class="badge bg-secondary">Solo lectura</span>
