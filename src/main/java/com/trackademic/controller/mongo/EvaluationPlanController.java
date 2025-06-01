@@ -1,4 +1,5 @@
 package com.trackademic.controller.mongo;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -297,4 +298,31 @@ public class EvaluationPlanController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/clone/{id}")
+    public String clonePlan(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            EvaluationPlan originalPlan = planService.getPlanById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
+
+            EvaluationPlan clonedPlan = EvaluationPlan.builder()
+                .title(originalPlan.getTitle() + " (Copia)")
+                .groupId(originalPlan.getGroupId())
+                .activities(new ArrayList<>(originalPlan.getActivities()))
+                .createdByStudentId(SecurityContextHolder.getContext().getAuthentication().getName())
+                .build();
+
+            planService.savePlan(clonedPlan);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Plan agregado exitosamente a tus planes.");
+            return "redirect:/evaluation-plans/my-plans";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se pudo clonar el plan: " + e.getMessage());
+            return "redirect:/evaluation-plans";
+        }
+    }
+
+
+
 }
