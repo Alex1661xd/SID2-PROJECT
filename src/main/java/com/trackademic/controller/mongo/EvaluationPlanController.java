@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.trackademic.model.mongo.Activities;
 import com.trackademic.model.mongo.Comment;
 import com.trackademic.model.postgres.Student;
 import com.trackademic.repository.postgres.StudentRepository;
@@ -305,10 +307,20 @@ public class EvaluationPlanController {
             EvaluationPlan originalPlan = planService.getPlanById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Plan no encontrado"));
 
+            // Crear nuevas actividades sin calificaciones (grade = null)
+            List<Activities> activitiesWithoutGrades = originalPlan.getActivities().stream()
+                .map(activity -> Activities.builder()
+                    .id(activity.getId())
+                    .name(activity.getName())
+                    .percentage(activity.getPercentage())
+                    .grade(null) // Importante: setear la calificación a null
+                    .build())
+                .toList();
+
             EvaluationPlan clonedPlan = EvaluationPlan.builder()
                 .title(originalPlan.getTitle() + " (Copia)")
                 .groupId(originalPlan.getGroupId())
-                .activities(new ArrayList<>(originalPlan.getActivities()))
+                .activities(activitiesWithoutGrades) // Usar las actividades sin calificaciones
                 .createdByStudentId(SecurityContextHolder.getContext().getAuthentication().getName())
                 .build();
 
